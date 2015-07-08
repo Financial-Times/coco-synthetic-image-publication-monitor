@@ -2,16 +2,24 @@ package main
 
 import (
 	"encoding/json"
+        "flag"
 	"fmt"
 	"net/http"
-	_ "time"
+	"time"
 )
 
-type endToEndTest struct {
+type synthPublApp struct {
 	cmsNotifier string
 	s3          string
         uuid        string
 }
+
+type publication struct {
+    succeeded   bool
+    errorMsg    string
+}
+
+var cmsNotifierAddress = flag.String("postAddr","cms-notifier-pr-uk-int.svc.ft.com","publish endpoint address (most probably the address of cms-notifier in UCS)")
 
 //fixed
 var uuid = "01234567-89ab-cdef-0123-456789abcdef"
@@ -19,9 +27,14 @@ var uuid = "01234567-89ab-cdef-0123-456789abcdef"
 func main() {
 	fmt.Printf("Starting synthetic image publication monitor...")
 
-        app := &endToEndTest{}
-        app.uuid = uuid
-	//ticker := time.NewTicker(time.Second)
+        flag.Parse()
+        app := &synthPublApp{
+            cmsNotifier: *cmsNotifierAddress,
+            uuid: uuid,
+        }
+        var _ = app
+	ticker := time.NewTicker(time.Second)
+        var _ = ticker
 	go func() {
 		//for t := range ticker.C {
 		//    fmt.Println("Tick at", t)
@@ -35,6 +48,8 @@ func main() {
 		fmt.Printf("Could not start http server.")
 	}
 }
+
+func (s *synthPublApp) publish(bytes chan<- []byte, history chan<- publication) {}
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(BuildRandomEOMImage(uuid))

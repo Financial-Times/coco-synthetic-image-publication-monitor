@@ -1,0 +1,50 @@
+<!DOCTYPE meta SYSTEM "/SysConfig/Classify/FTImages/classify.dtd">
+<meta>
+    <picture>
+        <caption/>
+        <category/>
+        <keywords/>
+        <adinfo/>
+        <photographer/>
+        <copyright_info>
+        <copyright_statement/>
+        <copyright_group/>
+        <distribution_rights/>
+        <legal_status/>
+        </copyright_info>
+        <web_information>
+            <caption/>
+            <alt_tag/>
+            <online-source/>
+            <manual-source/>
+            <DIFTcomWebType>graphic</DIFTcomWebType>
+        </web_information>
+        <provider/>
+        <film_type/>
+        <date_taken/>
+        <date_received/>
+        <reference_num/>
+        <roll_num/>
+        <frame_num/>
+        <checkboxes/>
+        <warnings/>
+        <security/>
+        <embargo_date/>
+        <job_description>
+            <city/>
+            <province/>
+            <country/>
+            <instructions/>
+        </job_description>
+        <price/>
+        <filename/>
+        <basket/>
+        <source/>
+        <byline/>
+        <headline/>
+        <uuid>{{ . }}</uuid>
+        <ratio>1.0</ratio>
+        <imageType>Charts</imageType>
+    </picture>
+    <markDeleted>False</markDeleted>
+</meta>"

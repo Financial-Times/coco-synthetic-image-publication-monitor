@@ -1,0 +1,22 @@
+<props>
+    <productInfo>
+        <name>Financial Times</name>
+        <issueDate>{{ . }}</issueDate>
+    </productInfo>
+    <workFolder>/FT</workFolder>
+    <summary/>
+    <imageInfo>
+        <width>302</width>
+        <height>282</height>
+        <ptWidth>302.0</ptWidth>
+        <ptHeight>282.0</ptHeight>
+        <xDim>106.54</xDim>
+        <yDim>99.48</yDim>
+        <dim>10.654cm x 9.948cm</dim>
+        <xres>72.0</xres>
+        <yres>72.0</yres>
+        <colorType>RGB</colorType>
+        <fileType>PNG</fileType>
+        <alphaChannels>1</alphaChannels>
+    </imageInfo>
+</props>

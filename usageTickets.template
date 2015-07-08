@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<tl>
+    <t>
+        <id>1</id>
+        <tp>Publisher</tp>
+        <c>tassellt</c>
+        <cd>{{ .Date }}</cd>
+        <dt>
+            <publishedDate>{{ .FormattedDate }}</publishedDate>
+        </dt>
+    </t>
+    <t>
+        <id>2</id>
+        <tp>web_publication</tp>
+        <c>tassellt</c>
+        <cd>{{ .Date }}</cd>
+        <dt>
+            <webpublish>
+                <site_url>http://www.ft.com/cms/s/{{ .Uuid }}.html</site_url>
+                <synd_url>http://www.ft.com/cms/s/{{ .Uuid }},s01=1.html</synd_url>
+            </webpublish>
+        </dt>
+    </t>
+    <t>
+        <id>3</id>
+        <tp>WebCopy</tp>
+        <c>tassellt</c>
+        <cd>{{ .Date }}</cd>
+        <dt>
+            <rep>cms@ftcmr01-uvpr-uk-p</rep>
+            <first>{{ .Date }}</first>
+            <last>{{ .Date }}</last>
+            <count>1</count>
+            <channel>FTcom</channel>
+        </dt>
+    </t>
+    <t>
+        <id>4</id>
+        <tp>mms</tp>
+        <c>servlet-mms</c>
+        <cd>20150616131500</cd>
+        <dt>
+            <srcUuid>{{ .Uuid }}</srcUuid>
+            <trgUuid>{{ .Uuid }}</trgUuid>
+            <srcRepo>PROD-cms-read</srcRepo>
+            <trgRepo>PROD-cma-write</trgRepo>
+            <ts>1234567890</ts>
+            <cls>com.eidosmedia.mms.task.extendedobjectmigrationtask.object.ExtendedObjectImpl</cls>
+            <seq>archive_on_publish_optimised</seq>
+            <job>archive_on_publish_optimised_job</job>
+        </dt>
+    </t>
+</tl>

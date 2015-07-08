@@ -1,0 +1,21 @@
+package main
+
+import (
+    "testing"
+    _ "fmt"
+)
+
+func TestNewByteArray(t *testing.T) {
+    var tests = []struct {
+        length int
+    } {
+        {0}, {1}, {10}, {100}, {1000},
+    }
+
+    for _, test := range tests {
+        b := newByteArray(test.length)
+        if test.length != len(b) {
+            t.Errorf("\nExpected: %s\nActual: %s", test.length, len(b))
+        }
+    }
+}

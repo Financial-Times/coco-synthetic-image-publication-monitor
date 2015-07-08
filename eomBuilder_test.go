@@ -15,7 +15,7 @@ func TestNewByteArray(t *testing.T) {
 	for _, test := range tests {
 		b := newByteArray(test.length)
 		if test.length != len(b) {
-			t.Errorf("\nExpected: %s\nActual: %s", test.length, len(b))
+			t.Errorf("\nExpected: %d\nActual: %d", test.length, len(b))
 		}
 	}
 }

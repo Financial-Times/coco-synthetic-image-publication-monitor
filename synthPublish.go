@@ -10,13 +10,17 @@ import (
 type endToEndTest struct {
 	cmsNotifier string
 	s3          string
+        uuid        string
 }
 
 //fixed
-var uuid = "8fe6ee49-cbd9-4f3e-8e7d-202164cf4eb5"
+var uuid = "01234567-89ab-cdef-0123-456789abcdef"
 
 func main() {
 	fmt.Printf("Starting synthetic image publication monitor...")
+
+        app := &endToEndTest{}
+        app.uuid = uuid
 	//ticker := time.NewTicker(time.Second)
 	go func() {
 		//for t := range ticker.C {

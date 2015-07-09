@@ -183,9 +183,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 		}
 
 		equals, msg := areEqual(sentImg, receivedImg)
-		log.Printf("%v %s", equals, msg)
 		app.latestPublication <- publication{latest.time, equals, msg}
-
 	}
 }
 

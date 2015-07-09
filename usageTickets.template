@@ -16,8 +16,8 @@
         <cd>{{ .Date }}</cd>
         <dt>
             <webpublish>
-                <site_url>http://www.ft.com/cms/s/{{ .Uuid }}.html</site_url>
-                <synd_url>http://www.ft.com/cms/s/{{ .Uuid }},s01=1.html</synd_url>
+                <site_url>http://www.ft.com/cms/s/{{ .UUID }}.html</site_url>
+                <synd_url>http://www.ft.com/cms/s/{{ .UUID }},s01=1.html</synd_url>
             </webpublish>
         </dt>
     </t>
@@ -40,8 +40,8 @@
         <c>servlet-mms</c>
         <cd>20150616131500</cd>
         <dt>
-            <srcUuid>{{ .Uuid }}</srcUuid>
-            <trgUuid>{{ .Uuid }}</trgUuid>
+            <srcUUID>{{ .UUID }}</srcUUID>
+            <trgUUID>{{ .UUID }}</trgUUID>
             <srcRepo>PROD-cms-read</srcRepo>
             <trgRepo>PROD-cma-write</trgRepo>
             <ts>1234567890</ts>

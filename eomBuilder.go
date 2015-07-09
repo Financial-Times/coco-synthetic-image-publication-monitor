@@ -9,7 +9,7 @@ import (
 )
 
 type Eom struct {
-	Uuid             string        `json:"uuid"`
+	UUID             string        `json:"uuid"`
 	EomType          string        `json:"type"`
 	Value            string        `json:"value"`
 	Attributes       string        `json:"attributes"`
@@ -19,18 +19,20 @@ type Eom struct {
 	LinkedObjects    []interface{} `json:"linkedObjects"`
 }
 
+// Builds and populates an Eom struct matching the Methode EOM representation.
+// The EOM value is a randomly generated 1000 length byte array encoded with base64, therefore producing a viewable string.
 func BuildRandomEOMImage(uuid string) *Eom {
 	t := time.Now()
 
 	eom := &Eom{}
-	eom.Uuid = uuid
+	eom.UUID = uuid
 	eom.EomType = "Image"
 	eom.Value = base64.StdEncoding.EncodeToString(newByteArray(1000))
 	eom.Attributes = populateTemplate("attributes.template", uuid)
 	eom.WorkflowStatus = ""
 	eom.SystemAttributes = populateTemplate("systemAttributes.template", t.Format("20060102"))
 	eom.UsageTickets = populateTemplate("usageTickets.template", struct {
-		Uuid, Date, FormattedDate string
+		UUID, Date, FormattedDate string
 	}{
 		uuid,
 		t.Format("20060102150405"),

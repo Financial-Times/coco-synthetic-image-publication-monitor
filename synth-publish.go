@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"sync"
 	"time"
 )
 
@@ -23,7 +22,6 @@ type syntheticPublication struct {
 	latestImage       chan string
 	latestPublication chan publication
 
-	mutex   *sync.Mutex
 	history []publication
 }
 
@@ -49,8 +47,7 @@ func main() {
 		uuid:              uuid,
 		latestImage:       make(chan string),
 		latestPublication: make(chan publication),
-		mutex:             &sync.Mutex{},
-		history:           make([]publication, 10),
+		history:           make([]publication, 0),
 	}
 
 	if *tick {
@@ -62,12 +59,21 @@ func main() {
 		}()
 	}
 	go app.checkPublishStatus()
+	go app.historyManager()
 
 	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
+	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Println("Error: Could not start http server.")
+	}
+}
+
+func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("History request.")
+	for i := len(app.history) - 1; i >= 0; i-- {
+		fmt.Fprintf(w, "%#v\n\n", app.history[i])
 	}
 }
 
@@ -163,6 +169,17 @@ func (app *syntheticPublication) checkPublishStatus() {
 		log.Printf("%v %s", equals, msg)
 		app.latestPublication <- publication{equals, msg}
 
+	}
+}
+
+func (app *syntheticPublication) historyManager() {
+	for {
+		latest := <- app.latestPublication
+
+		if len(app.history) == 10 {
+			app.history = app.history[1:len(app.history)]
+		}
+		app.history = append(app.history, latest)
 	}
 }
 

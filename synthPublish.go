@@ -72,7 +72,8 @@ func (s *synthPublApp) publish(image chan<- []byte, history chan<- publication) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		history <- publication{false, "Publishing failed at first step: could not post data to CMS notifier."}
+		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
+		history <- publication{false, errMsg}
 	} else {
 		image <- b
 	}

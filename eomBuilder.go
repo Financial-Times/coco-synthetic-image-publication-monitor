@@ -25,10 +25,10 @@ func BuildRandomEOMImage(uuid string) *Eom {
 	eom.Uuid = uuid
 	eom.EomType = "Image"
 	eom.Value = string(newByteArray(1000))
-	eom.Attributes = getAttributes("attributes.template", uuid)
+	eom.Attributes = populateTemplate("attributes.template", uuid)
 	eom.WorkflowStatus = ""
-	eom.SystemAttributes = getAttributes("systemAttributes.template", t.Format("20060102"))
-	eom.UsageTickets = getAttributes("usageTickets.template", struct {
+	eom.SystemAttributes = populateTemplate("systemAttributes.template", t.Format("20060102"))
+	eom.UsageTickets = populateTemplate("usageTickets.template", struct {
 		Uuid, Date, FormattedDate string
 	}{
 		uuid,
@@ -47,7 +47,7 @@ func newByteArray(length int) []byte {
 	return b
 }
 
-func getAttributes(fileTempl string, data interface{}) string {
+func populateTemplate(fileTempl string, data interface{}) string {
 	tmpl, err := template.ParseFiles(fileTempl)
 	if err != nil {
 		panic(err)

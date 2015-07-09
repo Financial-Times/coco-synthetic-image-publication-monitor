@@ -20,7 +20,7 @@ type publication struct {
 }
 
 var cmsNotifierAddress = flag.String("postAddr","cms-notifier-pr-uk-int.svc.ft.com","publish endpoint address (most probably the address of cms-notifier in UCS)")
-
+var tick = flag.Bool("tick", true, "periodially generate and post content to the post endpoint")
 //fixed
 var uuid = "01234567-89ab-cdef-0123-456789abcdef"
 
@@ -36,13 +36,14 @@ func main() {
 
         bytes := make(chan []byte)
         lastResult := make(chan publication)
-
-	ticker := time.NewTicker(time.Second)
-	go func() {
-		for _ = range ticker.C {
-                    app.publish(bytes,lastResult)
-		}
-	}()
+        if *tick {
+            ticker := time.NewTicker(time.Second)
+            go func() {
+                    for _ = range ticker.C {
+                        app.publish(bytes,lastResult)
+                    }
+            }()
+        }
 	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
 	http.HandleFunc("/forcePublish", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "force publish") })
 	http.HandleFunc("/test", testHandler)

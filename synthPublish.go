@@ -20,7 +20,7 @@ type publication struct {
 }
 
 var postEndpoint = flag.String("postEndpoint","cms-notifier-pr-uk-int.svc.ft.com","publish endpoint address (most probably the address of cms-notifier in UCS)")
-var tick = flag.Bool("tick", true, "periodially generate and post content to the post endpoint")
+var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 //fixed
 var uuid = "01234567-89ab-cdef-0123-456789abcdef"
 

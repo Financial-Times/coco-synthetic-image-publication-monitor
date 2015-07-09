@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"github.com/dchest/uniuri"
 )
 
 type syntheticPublication struct {
@@ -65,17 +66,35 @@ func main() {
 
 func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Force publish.")
-	app.publish()
+	err := app.publish()
+	if err != nil {
+		fmt.Fprintf(w, "Force publish failed. %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
-func (app *syntheticPublication) publish() {
+func (app *syntheticPublication) publish() error{
 	b, err := json.Marshal(BuildRandomEOMImage(uuid))
 	if err != nil {
-		log.Println("JSON marshalling failed.")
-		return
+		log.Printf("JSON marshalling failed. %s", err.Error())
+		return err
 	}
 	buf := bytes.NewReader(b)
-	resp, err := http.Post(buildPostEndpoint(app.postEndpoint), "application/json; charset=utf-8", buf)
+
+	client := http.Client{}
+	req, err := http.NewRequest("POST", buildPostEndpoint(app.postEndpoint), buf)
+	if err != nil {
+		log.Printf("Error: creating request failed. %s", err.Error())
+		return err
+	}
+	req.Header.Add("X-Request-Id", "SYNTHETIC-REQ-MON_" + uniuri.NewLen(10))
+	req.Header.Add("X-Origin-System-Id", "methode-web-pub")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: executing request failed. %s", err.Error())
+		return err
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
@@ -84,6 +103,8 @@ func (app *syntheticPublication) publish() {
 	} else {
 		app.latestImage <- b
 	}
+
+	return nil
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {

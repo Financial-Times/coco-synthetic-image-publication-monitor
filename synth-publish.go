@@ -11,15 +11,15 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"time"
 	"sync"
+	"time"
 )
 
 type syntheticPublication struct {
-	postHost string
-	s3Host   string
-	uuid     string
-	latestImage   	  chan postedData
+	postHost          string
+	s3Host            string
+	uuid              string
+	latestImage       chan postedData
 	latestPublication chan publication
 
 	mutex   *sync.Mutex
@@ -29,11 +29,11 @@ type syntheticPublication struct {
 type postedData struct {
 	time time.Time
 	//base64 encoded string representation of the generated image
-	img	 string
+	img string
 }
 
 type publication struct {
-	time time.Time
+	time      time.Time
 	succeeded bool
 	errorMsg  string
 }
@@ -55,7 +55,7 @@ func main() {
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
 		latestPublication: make(chan publication),
-		mutex:			   &sync.Mutex{},
+		mutex:             &sync.Mutex{},
 		history:           make([]publication, 0),
 	}
 
@@ -84,7 +84,7 @@ func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.R
 	app.mutex.Lock()
 	for i := len(app.history) - 1; i >= 0; i-- {
 		fmt.Fprintf(w, "%d. { Date: %s, Published: %t, Error msg: %s}\n\n",
-			len(app.history) - i,
+			len(app.history)-i,
 			app.history[i].time.String(),
 			app.history[i].succeeded,
 			app.history[i].errorMsg,
@@ -141,7 +141,7 @@ var generalErrMsg = "Internal error. "
 
 func (app *syntheticPublication) checkPublishStatus() {
 	for {
-		latest := <- app.latestImage
+		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
@@ -171,7 +171,6 @@ func (app *syntheticPublication) checkPublishStatus() {
 			log.Println(errMsg)
 			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
 			continue
-
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
@@ -189,7 +188,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 
 func (app *syntheticPublication) historyManager() {
 	for {
-		latest := <- app.latestPublication
+		latest := <-app.latestPublication
 
 		app.mutex.Lock()
 		if len(app.history) == 10 {

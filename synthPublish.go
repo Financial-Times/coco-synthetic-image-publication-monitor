@@ -7,13 +7,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+        "sync"
 	"time"
 )
 
 type syntheticPublication struct {
-	postEndpoint string
-	s3           string
-	uuid         string
+	postEndpoint        string
+	s3                  string
+	uuid                string
+        latestImage         chan []byte
+        latestPublication   chan publication
+
+        mutex               *sync.Mutex
+        history             []publication
 }
 
 type publication struct {
@@ -34,15 +40,17 @@ func main() {
 	app := &syntheticPublication{
 		postEndpoint: *postEndpoint,
 		uuid:         uuid,
+                latestImage: make(chan []byte),
+                latestPublication: make(chan publication),
+                mutex:       &sync.Mutex{},
+                history:     make([]publication, 10),
 	}
 
-	bytes := make(chan []byte)
-	lastResult := make(chan publication)
 	if *tick {
 		ticker := time.NewTicker(time.Second)
 		go func() {
 			for _ = range ticker.C {
-				app.publish(bytes, lastResult)
+				app.publish()
 			}
 		}()
 	}
@@ -57,10 +65,10 @@ func main() {
 
 func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Force publish.")
-	//app.publish()
+        app.publish()
 }
 
-func (app *syntheticPublication) publish(image chan<- []byte, history chan<- publication) {
+func (app *syntheticPublication) publish() {
 	b, err := json.Marshal(BuildRandomEOMImage(uuid))
 	if err != nil {
 		log.Println("JSON marshalling failed.")
@@ -72,9 +80,9 @@ func (app *syntheticPublication) publish(image chan<- []byte, history chan<- pub
 
 	if resp.StatusCode != 200 {
                 errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode);
-		history <- publication{false, errMsg}
+		app.latestPublication <- publication{false, errMsg}
 	} else {
-		image <- b
+		app.latestImage <- b
 	}
 }
 

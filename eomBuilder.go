@@ -27,7 +27,7 @@ func BuildRandomEOMImage(uuid string) *Eom {
 	return &Eom{
 		UUID:             uuid,
 		EomType:          "Image",
-		Value:            base64.StdEncoding.EncodeToString(newByteArray(1000)),
+		Value:            base64.StdEncoding.EncodeToString(randomBytes(1000)),
 		Attributes:       populateTemplate("attributes.template", uuid),
 		WorkflowStatus:   "",
 		SystemAttributes: populateTemplate("systemAttributes.template", t.Format("20060102")),
@@ -42,7 +42,7 @@ func BuildRandomEOMImage(uuid string) *Eom {
 	}
 }
 
-func newByteArray(length int) []byte {
+func randomBytes(length int) []byte {
 	b := make([]byte, length)
 	for i := 0; i < len(b); i++ {
 		b[i] = byte(rand.Intn(256))

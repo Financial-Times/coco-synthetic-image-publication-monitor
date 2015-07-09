@@ -13,9 +13,9 @@ import (
 )
 
 type syntheticPublication struct {
-	postHost     string
-	s3Host       string
-	uuid         string
+	postHost string
+	s3Host   string
+	uuid     string
 	//base64 encoded string representation of the generated image
 	latestImage       chan string
 	latestPublication chan publication
@@ -41,13 +41,13 @@ func main() {
 
 	flag.Parse()
 	app := &syntheticPublication{
-		postHost:			*postHost,
-		s3Host:		   		*s3Host,
-		uuid:              	uuid,
-		latestImage:       	make(chan string),
-		latestPublication: 	make(chan publication),
-		mutex:             	&sync.Mutex{},
-		history:           	make([]publication, 10),
+		postHost:          *postHost,
+		s3Host:            *s3Host,
+		uuid:              uuid,
+		latestImage:       make(chan string),
+		latestPublication: make(chan publication),
+		mutex:             &sync.Mutex{},
+		history:           make([]publication, 10),
 	}
 
 	if *tick {

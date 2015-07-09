@@ -29,7 +29,8 @@ type publication struct {
 	errorMsg  string
 }
 
-var postEndpoint = flag.String("postEndpoint", "cms-notifier-pr-uk-int.svc.ft.com", "publish endpoint address (most probably the address of cms-notifier in UCS)")
+var postEndpoint = flag.String("postEndpoint", "cms-notifier-pr-uk-int.svc.ft.com", "publish endpoint address (e.g. address of cms-notifier in UCS)")
+var s3Endpoint = flag.String("s3Endpoint", "com.ft.imagepublish.int.s3.amazonaws.com", "stored image endpoint (e.g. address of the s3 host)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 
 //fixed
@@ -41,6 +42,7 @@ func main() {
 	flag.Parse()
 	app := &syntheticPublication{
 		postEndpoint:      *postEndpoint,
+		s3:		   		   *s3Endpoint,
 		uuid:              uuid,
 		latestImage:       make(chan string),
 		latestPublication: make(chan publication),

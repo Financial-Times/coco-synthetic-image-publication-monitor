@@ -1,9 +1,11 @@
 package main
 
 import (
+        "bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+        "log"
 	"net/http"
 	"time"
 )
@@ -46,7 +48,7 @@ func main() {
 		}()
 	}
 	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
-	http.HandleFunc("/forcePublish", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "force publish") })
+	http.HandleFunc("/forcePublish", app.forcePublish) 
 	http.HandleFunc("/test", testHandler)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -54,7 +56,27 @@ func main() {
 	}
 }
 
-func (s *synthPublApp) publish(bytes chan<- []byte, history chan<- publication) {}
+func (s *synthPublApp) forcePublish(w http.ResponseWriter, r *http.Request) {
+        log.Printf("Force publish.")
+        //s.publish()
+}
+
+func (s *synthPublApp) publish(image chan<- []byte, history chan<- publication) {
+    b, err := json.Marshal(BuildRandomEOMImage(uuid))
+    if err != nil {
+        log.Println("JSON marshalling failed.")
+        return
+    }
+    buf := bytes.NewReader(b)
+    resp, err := http.Post("http://" + s.postEndpoint + "/notify", "application/json; charset=utf-8", buf)
+    defer resp.Body.Close()
+
+    if resp.StatusCode != 200 {
+        history <- publication{false, "Publishing failed at first step: could not post data to CMS notifier."}
+    } else {
+        image <- b
+    }
+}
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(BuildRandomEOMImage(uuid))

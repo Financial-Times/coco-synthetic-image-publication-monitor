@@ -75,8 +75,8 @@ func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Req
 	log.Printf("Force publish.")
 	err := app.publish()
 	if err != nil {
-		fmt.Fprintf(w, "Force publish failed. %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Force publish failed. %s", err.Error())
 	}
 }
 

@@ -34,7 +34,7 @@ var tick = flag.Bool("tick", true, "true, if this service should periodially gen
 var uuid = "01234567-89ab-cdef-0123-456789abcdef"
 
 func main() {
-	fmt.Printf("Starting synthetic image publication monitor...")
+        log.Println("Starting synthetic image publication monitor...")
 
 	flag.Parse()
 	app := &syntheticPublication{
@@ -59,7 +59,7 @@ func main() {
 	http.HandleFunc("/test", testHandler)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
-		fmt.Printf("Could not start http server.")
+		log.Println("Could not start http server.")
 	}
 }
 

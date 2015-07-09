@@ -33,7 +33,7 @@ type publication struct {
 }
 
 var postHost = flag.String("postHost", "cms-notifier-pr-uk-int.svc.ft.com", "publish entrypoint host name (e.g. address of cms-notifier in UCS)")
-var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 host)")
+var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 service)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 
 //fixed

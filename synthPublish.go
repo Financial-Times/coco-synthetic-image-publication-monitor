@@ -115,7 +115,7 @@ func (app *syntheticPublication) publish() error {
 	return nil
 }
 
-var generalErrMsg = "Internal end-to-end test service error "
+var generalErrMsg = "Internal error. "
 
 func (app *syntheticPublication) checkPublishStatus() {
 	for {

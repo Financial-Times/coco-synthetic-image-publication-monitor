@@ -19,15 +19,21 @@ type syntheticPublication struct {
 	postHost string
 	s3Host   string
 	uuid     string
-	//base64 encoded string representation of the generated image
-	latestImage       chan string
+	latestImage   	  chan postedData
 	latestPublication chan publication
 
 	mutex   *sync.Mutex
 	history []publication
 }
 
+type postedData struct {
+	time time.Time
+	//base64 encoded string representation of the generated image
+	img	 string
+}
+
 type publication struct {
+	time time.Time
 	succeeded bool
 	errorMsg  string
 }
@@ -47,7 +53,7 @@ func main() {
 		postHost:          *postHost,
 		s3Host:            *s3Host,
 		uuid:              uuid,
-		latestImage:       make(chan string),
+		latestImage:       make(chan postedData),
 		latestPublication: make(chan publication),
 		mutex:			   &sync.Mutex{},
 		history:           make([]publication, 0),
@@ -77,7 +83,12 @@ func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.R
 	log.Printf("History request.")
 	app.mutex.Lock()
 	for i := len(app.history) - 1; i >= 0; i-- {
-		fmt.Fprintf(w, "%d. { Published: %s, Error msg: %s}\n\n", len(app.history) - i, app.history[i].succeeded, app.history[i].errorMsg)
+		fmt.Fprintf(w, "%d. { Date: %s, Published: %t, Error msg: %s}\n\n",
+			len(app.history) - i,
+			app.history[i].time.String(),
+			app.history[i].succeeded,
+			app.history[i].errorMsg,
+		)
 	}
 	app.mutex.Unlock()
 }
@@ -92,7 +103,7 @@ func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Req
 }
 
 func (app *syntheticPublication) publish() error {
-	eom := BuildRandomEOMImage(uuid)
+	eom, time := BuildRandomEOMImage(uuid)
 	json, err := json.Marshal(eom)
 	if err != nil {
 		log.Printf("JSON marshalling failed. %s", err.Error())
@@ -118,9 +129,9 @@ func (app *syntheticPublication) publish() error {
 
 	if resp.StatusCode != 200 {
 		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
-		app.latestPublication <- publication{false, errMsg}
+		app.latestPublication <- publication{time, false, errMsg}
 	} else {
-		app.latestImage <- eom.Value
+		app.latestImage <- postedData{time, eom.Value}
 	}
 
 	return nil
@@ -130,11 +141,12 @@ var generalErrMsg = "Internal error. "
 
 func (app *syntheticPublication) checkPublishStatus() {
 	for {
-		sentImg, err := base64.StdEncoding.DecodeString(<-app.latestImage)
+		latest := <- app.latestImage
+		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
 			log.Printf(errMsg)
-			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 		time.Sleep(30 * time.Second)
@@ -142,7 +154,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
 			log.Printf(errMsg)
-			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 		defer resp.Body.Close()
@@ -152,12 +164,12 @@ func (app *syntheticPublication) checkPublishStatus() {
 		case http.StatusNotFound:
 			errMsg := fmt.Sprint("Error: Image not found.")
 			log.Println(errMsg)
-			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
 			continue
 		default:
 			errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
 			log.Println(errMsg)
-			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
 			continue
 
 		}
@@ -166,13 +178,13 @@ func (app *syntheticPublication) checkPublishStatus() {
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Could not read resp body. %s", err.Error())
 			log.Printf(errMsg)
-			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 
 		equals, msg := areEqual(sentImg, receivedImg)
 		log.Printf("%v %s", equals, msg)
-		app.latestPublication <- publication{equals, msg}
+		app.latestPublication <- publication{latest.time, equals, msg}
 
 	}
 }

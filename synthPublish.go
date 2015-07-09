@@ -13,8 +13,8 @@ import (
 )
 
 type syntheticPublication struct {
-	postEndpoint string
-	s3           string
+	postHost     string
+	s3Host       string
 	uuid         string
 	//base64 encoded string representation of the generated image
 	latestImage       chan string
@@ -29,8 +29,8 @@ type publication struct {
 	errorMsg  string
 }
 
-var postEndpoint = flag.String("postEndpoint", "cms-notifier-pr-uk-int.svc.ft.com", "publish endpoint address (e.g. address of cms-notifier in UCS)")
-var s3Endpoint = flag.String("s3Endpoint", "com.ft.imagepublish.int.s3.amazonaws.com", "stored image endpoint (e.g. address of the s3 host)")
+var postHost = flag.String("postHost", "cms-notifier-pr-uk-int.svc.ft.com", "publish entrypoint host name (e.g. address of cms-notifier in UCS)")
+var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 host)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 
 //fixed
@@ -41,13 +41,13 @@ func main() {
 
 	flag.Parse()
 	app := &syntheticPublication{
-		postEndpoint:      *postEndpoint,
-		s3:		   		   *s3Endpoint,
-		uuid:              uuid,
-		latestImage:       make(chan string),
-		latestPublication: make(chan publication),
-		mutex:             &sync.Mutex{},
-		history:           make([]publication, 10),
+		postHost:			*postHost,
+		s3Host:		   		*s3Host,
+		uuid:              	uuid,
+		latestImage:       	make(chan string),
+		latestPublication: 	make(chan publication),
+		mutex:             	&sync.Mutex{},
+		history:           	make([]publication, 10),
 	}
 
 	if *tick {
@@ -85,7 +85,7 @@ func (app *syntheticPublication) publish() error {
 	buf := bytes.NewReader(json)
 
 	client := http.Client{}
-	req, err := http.NewRequest("POST", buildPostEndpoint(app.postEndpoint), buf)
+	req, err := http.NewRequest("POST", buildPostEndpoint(app.postHost), buf)
 	if err != nil {
 		log.Printf("Error: creating request failed. %s", err.Error())
 		return err

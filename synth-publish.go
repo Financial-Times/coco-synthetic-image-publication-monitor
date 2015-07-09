@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"reflect"
 	"sync"
 	"time"
 )
@@ -200,7 +199,7 @@ func (app *syntheticPublication) historyManager() {
 }
 
 func areEqual(b1, b2 []byte) (bool, string) {
-	if reflect.DeepEqual(b1, b2) {
+	if bytes.Equal(b1, b2) {
 		return true, ""
 	} else {
 		return false, "The sent and received images are not equal."

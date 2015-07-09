@@ -33,12 +33,15 @@ func main() {
             uuid: uuid,
         }
         var _ = app
+
+        bytes := make(chan []byte)
+        lastResult := make(chan publication)
+
 	ticker := time.NewTicker(time.Second)
-        var _ = ticker
 	go func() {
-		//for t := range ticker.C {
-		//    fmt.Println("Tick at", t)
-		//}
+		for _ = range ticker.C {
+                    app.publish(bytes,lastResult)
+		}
 	}()
 	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
 	http.HandleFunc("/forcePublish", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "force publish") })

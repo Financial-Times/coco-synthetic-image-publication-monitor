@@ -16,7 +16,7 @@ type syntheticPublication struct {
 	postEndpoint      string
 	s3                string
 	uuid              string
-	latestImage       chan []byte
+	latestImage       chan string
 	latestPublication chan publication
 
 	mutex   *sync.Mutex
@@ -41,7 +41,7 @@ func main() {
 	app := &syntheticPublication{
 		postEndpoint:      *postEndpoint,
 		uuid:              uuid,
-		latestImage:       make(chan []byte),
+		latestImage:       make(chan string),
 		latestPublication: make(chan publication),
 		mutex:             &sync.Mutex{},
 		history:           make([]publication, 10),
@@ -74,12 +74,13 @@ func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Req
 }
 
 func (app *syntheticPublication) publish() error{
-	b, err := json.Marshal(BuildRandomEOMImage(uuid))
+	eom := BuildRandomEOMImage(uuid)
+	json, err := json.Marshal(eom)
 	if err != nil {
 		log.Printf("JSON marshalling failed. %s", err.Error())
 		return err
 	}
-	buf := bytes.NewReader(b)
+	buf := bytes.NewReader(json)
 
 	client := http.Client{}
 	req, err := http.NewRequest("POST", buildPostEndpoint(app.postEndpoint), buf)
@@ -101,7 +102,7 @@ func (app *syntheticPublication) publish() error{
 		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
 		app.latestPublication <- publication{false, errMsg}
 	} else {
-		app.latestImage <- b
+		app.latestImage <- eom.Value
 	}
 
 	return nil

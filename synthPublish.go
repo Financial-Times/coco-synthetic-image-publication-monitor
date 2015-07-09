@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/dchest/uniuri"
 	"log"
 	"net/http"
 	"sync"
 	"time"
-	"github.com/dchest/uniuri"
 )
 
 type syntheticPublication struct {
-	postEndpoint      string
-	s3                string
-	uuid              string
+	postEndpoint string
+	s3           string
+	uuid         string
+	//base64 encoded string representation of the generated image
 	latestImage       chan string
 	latestPublication chan publication
 
@@ -73,7 +74,7 @@ func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (app *syntheticPublication) publish() error{
+func (app *syntheticPublication) publish() error {
 	eom := BuildRandomEOMImage(uuid)
 	json, err := json.Marshal(eom)
 	if err != nil {
@@ -88,7 +89,7 @@ func (app *syntheticPublication) publish() error{
 		log.Printf("Error: creating request failed. %s", err.Error())
 		return err
 	}
-	req.Header.Add("X-Request-Id", "SYNTHETIC-REQ-MON_" + uniuri.NewLen(10))
+	req.Header.Add("X-Request-Id", "SYNTHETIC-REQ-MON_"+uniuri.NewLen(10))
 	req.Header.Add("X-Origin-System-Id", "methode-web-pub")
 
 	resp, err := client.Do(req)

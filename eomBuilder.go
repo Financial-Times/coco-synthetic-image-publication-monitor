@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"math/rand"
 	"text/template"
 	"time"
-	"encoding/base64"
 )
 
 type Eom struct {

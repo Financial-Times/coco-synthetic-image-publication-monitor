@@ -9,7 +9,7 @@ import (
 )
 
 type synthPublApp struct {
-	cmsNotifier string
+	postEndpoint string
 	s3          string
         uuid        string
 }
@@ -19,7 +19,7 @@ type publication struct {
     errorMsg    string
 }
 
-var cmsNotifierAddress = flag.String("postAddr","cms-notifier-pr-uk-int.svc.ft.com","publish endpoint address (most probably the address of cms-notifier in UCS)")
+var postEndpoint = flag.String("postEndpoint","cms-notifier-pr-uk-int.svc.ft.com","publish endpoint address (most probably the address of cms-notifier in UCS)")
 var tick = flag.Bool("tick", true, "periodially generate and post content to the post endpoint")
 //fixed
 var uuid = "01234567-89ab-cdef-0123-456789abcdef"
@@ -29,7 +29,7 @@ func main() {
 
         flag.Parse()
         app := &synthPublApp{
-            cmsNotifier: *cmsNotifierAddress,
+            postEndpoint: *postEndpoint,
             uuid: uuid,
         }
         var _ = app

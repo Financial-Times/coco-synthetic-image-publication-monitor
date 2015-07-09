@@ -7,19 +7,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-        "sync"
+	"sync"
 	"time"
 )
 
 type syntheticPublication struct {
-	postEndpoint        string
-	s3                  string
-	uuid                string
-        latestImage         chan []byte
-        latestPublication   chan publication
+	postEndpoint      string
+	s3                string
+	uuid              string
+	latestImage       chan []byte
+	latestPublication chan publication
 
-        mutex               *sync.Mutex
-        history             []publication
+	mutex   *sync.Mutex
+	history []publication
 }
 
 type publication struct {
@@ -34,16 +34,16 @@ var tick = flag.Bool("tick", true, "true, if this service should periodially gen
 var uuid = "01234567-89ab-cdef-0123-456789abcdef"
 
 func main() {
-        log.Println("Starting synthetic image publication monitor...")
+	log.Println("Starting synthetic image publication monitor...")
 
 	flag.Parse()
 	app := &syntheticPublication{
-		postEndpoint: *postEndpoint,
-		uuid:         uuid,
-                latestImage: make(chan []byte),
-                latestPublication: make(chan publication),
-                mutex:       &sync.Mutex{},
-                history:     make([]publication, 10),
+		postEndpoint:      *postEndpoint,
+		uuid:              uuid,
+		latestImage:       make(chan []byte),
+		latestPublication: make(chan publication),
+		mutex:             &sync.Mutex{},
+		history:           make([]publication, 10),
 	}
 
 	if *tick {
@@ -65,7 +65,7 @@ func main() {
 
 func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Force publish.")
-        app.publish()
+	app.publish()
 }
 
 func (app *syntheticPublication) publish() {
@@ -79,7 +79,7 @@ func (app *syntheticPublication) publish() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-                errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode);
+		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
 		app.latestPublication <- publication{false, errMsg}
 	} else {
 		app.latestImage <- b
@@ -95,5 +95,5 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func buildPostEndpoint(host string) string {
-    return "http://" + host + "/notify"
+	return "http://" + host + "/notify"
 }

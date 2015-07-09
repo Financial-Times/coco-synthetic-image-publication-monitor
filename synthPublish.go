@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"github.com/golang/go/src/pkg/encoding/base64"
+	"io/ioutil"
+	"reflect"
 )
 
 type syntheticPublication struct {
@@ -51,13 +54,15 @@ func main() {
 	}
 
 	if *tick {
-		ticker := time.NewTicker(time.Second)
+		ticker := time.NewTicker(time.Minute)
 		go func() {
 			for _ = range ticker.C {
 				app.publish()
 			}
 		}()
 	}
+	go app.checkPublishStatus()
+
 	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
@@ -110,6 +115,69 @@ func (app *syntheticPublication) publish() error {
 	return nil
 }
 
+var generalErrMsg = "Internal end-to-end test service error "
+
+func (app *syntheticPublication) checkPublishStatus() {
+	for {
+		sentImg, err := base64.StdEncoding.DecodeString(<- app.latestImage)
+		if err != nil {
+			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
+			log.Printf(errMsg)
+			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			continue
+		}
+		time.Sleep(30 * time.Second)
+		resp, err := http.Get(buildGetEndpoint(app.s3Host, app.uuid))
+		if err != nil {
+			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
+			log.Printf(errMsg)
+			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			continue
+		}
+		defer resp.Body.Close()
+
+		switch (resp.StatusCode) {
+			case http.StatusOK :
+			case http.StatusNotFound :
+				errMsg := fmt.Sprint("Error: Image not found.")
+				log.Println(errMsg)
+				app.latestPublication <- publication{false, generalErrMsg + errMsg}
+				continue
+			default:
+				errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
+				log.Println(errMsg)
+				app.latestPublication <- publication{false, generalErrMsg + errMsg}
+				continue
+
+		}
+
+		receivedImg, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			errMsg := fmt.Sprintf("Error: Could not read resp body. %s", err.Error())
+			log.Printf(errMsg)
+			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			continue
+		}
+
+		equals, msg := areEqual(sentImg, receivedImg)
+		log.Printf("%v %s", equals, msg)
+		app.latestPublication <- publication{ equals, msg }
+
+	}
+}
+
+func areEqual(b1, b2 []byte) (bool, string) {
+	if reflect.DeepEqual(b1, b2) {
+		return true, ""
+	} else {
+		return false, "The sent and received images are not equal."
+	}
+}
+
 func buildPostEndpoint(host string) string {
 	return "http://" + host + "/notify"
+}
+
+func buildGetEndpoint(host, uuid string) string {
+	return "http://" + host + "/" + uuid
 }

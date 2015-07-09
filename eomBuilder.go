@@ -8,14 +8,14 @@ import (
 )
 
 type Eom struct {
-	Uuid             string        `json: uuid`
-	EomType          string        `json: type`
-	Value            string        `json: value`
-	Attributes       string        `json: attributes`
-	WorkflowStatus   string        `json: workflowStatus`
-	SystemAttributes string        `json: systemAttributes`
-	UsageTickets     string        `json: usageTickets`
-	LinkedObjects    []interface{} `json: linkedObjects`
+	Uuid             string        `json:"uuid"`
+	EomType          string        `json:"type"`
+	Value            string        `json:"value"`
+	Attributes       string        `json:"attributes"`
+	WorkflowStatus   string        `json:"workflowStatus"`
+	SystemAttributes string        `json:"systemAttributes"`
+	UsageTickets     string        `json:"usageTickets"`
+	LinkedObjects    []interface{} `json:"linkedObjects"`
 }
 
 func BuildRandomEOMImage(uuid string) *Eom {

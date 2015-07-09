@@ -6,13 +6,13 @@ import (
 	"flag"
 	"fmt"
 	"github.com/dchest/uniuri"
-	"log"
-	"net/http"
-	"sync"
-	"time"
 	"github.com/golang/go/src/pkg/encoding/base64"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"reflect"
+	"sync"
+	"time"
 )
 
 type syntheticPublication struct {
@@ -119,7 +119,7 @@ var generalErrMsg = "Internal error. "
 
 func (app *syntheticPublication) checkPublishStatus() {
 	for {
-		sentImg, err := base64.StdEncoding.DecodeString(<- app.latestImage)
+		sentImg, err := base64.StdEncoding.DecodeString(<-app.latestImage)
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
 			log.Printf(errMsg)
@@ -136,18 +136,18 @@ func (app *syntheticPublication) checkPublishStatus() {
 		}
 		defer resp.Body.Close()
 
-		switch (resp.StatusCode) {
-			case http.StatusOK :
-			case http.StatusNotFound :
-				errMsg := fmt.Sprint("Error: Image not found.")
-				log.Println(errMsg)
-				app.latestPublication <- publication{false, generalErrMsg + errMsg}
-				continue
-			default:
-				errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
-				log.Println(errMsg)
-				app.latestPublication <- publication{false, generalErrMsg + errMsg}
-				continue
+		switch resp.StatusCode {
+		case http.StatusOK:
+		case http.StatusNotFound:
+			errMsg := fmt.Sprint("Error: Image not found.")
+			log.Println(errMsg)
+			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			continue
+		default:
+			errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
+			log.Println(errMsg)
+			app.latestPublication <- publication{false, generalErrMsg + errMsg}
+			continue
 
 		}
 
@@ -161,7 +161,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 
 		equals, msg := areEqual(sentImg, receivedImg)
 		log.Printf("%v %s", equals, msg)
-		app.latestPublication <- publication{ equals, msg }
+		app.latestPublication <- publication{equals, msg}
 
 	}
 }

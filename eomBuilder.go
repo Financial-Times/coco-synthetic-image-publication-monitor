@@ -24,25 +24,25 @@ type Eom struct {
 func BuildRandomEOMImage(uuid string) *Eom {
 	t := time.Now()
 
-	eom := &Eom{}
-	eom.UUID = uuid
-	eom.EomType = "Image"
-	eom.Value = base64.StdEncoding.EncodeToString(newByteArray(1000))
-	eom.Attributes = populateTemplate("attributes.template", uuid)
-	eom.WorkflowStatus = ""
-	eom.SystemAttributes = populateTemplate("systemAttributes.template", t.Format("20060102"))
-	eom.UsageTickets = populateTemplate("usageTickets.template", struct {
-		UUID, Date, FormattedDate string
-	}{
-		uuid,
-		t.Format("20060102150405"),
-		t.Format(time.UnixDate),
-	})
-	eom.LinkedObjects = make([]interface{}, 0)
-	return eom
+	return &Eom{
+		UUID:             uuid,
+		EomType:          "Image",
+		Value:            base64.StdEncoding.EncodeToString(randomBytes(1000)),
+		Attributes:       populateTemplate("attributes.template", uuid),
+		WorkflowStatus:   "",
+		SystemAttributes: populateTemplate("systemAttributes.template", t.Format("20060102")),
+		UsageTickets: populateTemplate("usageTickets.template", struct {
+			UUID, Date, FormattedDate string
+		}{
+			uuid,
+			t.Format("20060102150405"),
+			t.Format(time.UnixDate),
+		}),
+		LinkedObjects: make([]interface{}, 0),
+	}
 }
 
-func newByteArray(length int) []byte {
+func randomBytes(length int) []byte {
 	b := make([]byte, length)
 	for i := 0; i < len(b); i++ {
 		b[i] = byte(rand.Intn(256))

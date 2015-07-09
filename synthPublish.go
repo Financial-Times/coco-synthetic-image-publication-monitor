@@ -33,7 +33,7 @@ var postEndpoint = flag.String("postEndpoint", "cms-notifier-pr-uk-int.svc.ft.co
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 
 //fixed
-var uuid = "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3"
+const uuid = "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3"
 
 func main() {
 	log.Println("Starting synthetic image publication monitor...")

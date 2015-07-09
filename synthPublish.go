@@ -75,7 +75,7 @@ func (app *syntheticPublication) publish() {
 		return
 	}
 	buf := bytes.NewReader(b)
-	resp, err := http.Post("http://"+app.postEndpoint+"/notify", "application/json; charset=utf-8", buf)
+	resp, err := http.Post(buildPostEndpoint(app.postEndpoint), "application/json; charset=utf-8", buf)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
@@ -92,4 +92,8 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Marshaling failed")
 	}
 	fmt.Fprintf(w, "test eom: \n%s", string(b))
+}
+
+func buildPostEndpoint(host string) string {
+    return "http://" + host + "/notify"
 }

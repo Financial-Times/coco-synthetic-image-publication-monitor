@@ -77,7 +77,7 @@ func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.R
 	log.Printf("History request.")
 	app.mutex.Lock()
 	for i := len(app.history) - 1; i >= 0; i-- {
-		fmt.Fprintf(w, "%#v\n\n", app.history[i])
+		fmt.Fprintf(w, "%d. { Published: %s, Error msg: %s}\n\n", len(app.history) - i, app.history[i].succeeded, app.history[i].errorMsg)
 	}
 	app.mutex.Unlock()
 }

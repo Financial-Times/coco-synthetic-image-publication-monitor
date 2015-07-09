@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type synthPublApp struct {
+type syntheticPublication struct {
 	postEndpoint string
 	s3           string
 	uuid         string
@@ -31,11 +31,10 @@ func main() {
 	fmt.Printf("Starting synthetic image publication monitor...")
 
 	flag.Parse()
-	app := &synthPublApp{
+	app := &syntheticPublication{
 		postEndpoint: *postEndpoint,
 		uuid:         uuid,
 	}
-	var _ = app
 
 	bytes := make(chan []byte)
 	lastResult := make(chan publication)
@@ -56,23 +55,23 @@ func main() {
 	}
 }
 
-func (s *synthPublApp) forcePublish(w http.ResponseWriter, r *http.Request) {
+func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Force publish.")
-	//s.publish()
+	//app.publish()
 }
 
-func (s *synthPublApp) publish(image chan<- []byte, history chan<- publication) {
+func (app *syntheticPublication) publish(image chan<- []byte, history chan<- publication) {
 	b, err := json.Marshal(BuildRandomEOMImage(uuid))
 	if err != nil {
 		log.Println("JSON marshalling failed.")
 		return
 	}
 	buf := bytes.NewReader(b)
-	resp, err := http.Post("http://"+s.postEndpoint+"/notify", "application/json; charset=utf-8", buf)
+	resp, err := http.Post("http://"+app.postEndpoint+"/notify", "application/json; charset=utf-8", buf)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
+                errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode);
 		history <- publication{false, errMsg}
 	} else {
 		image <- b

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"reflect"
 	"time"
+	"sync"
 )
 
 type syntheticPublication struct {
@@ -22,6 +23,7 @@ type syntheticPublication struct {
 	latestImage       chan string
 	latestPublication chan publication
 
+	mutex   *sync.Mutex
 	history []publication
 }
 
@@ -47,6 +49,7 @@ func main() {
 		uuid:              uuid,
 		latestImage:       make(chan string),
 		latestPublication: make(chan publication),
+		mutex:			   &sync.Mutex{},
 		history:           make([]publication, 0),
 	}
 
@@ -72,9 +75,11 @@ func main() {
 
 func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("History request.")
+	app.mutex.Lock()
 	for i := len(app.history) - 1; i >= 0; i-- {
 		fmt.Fprintf(w, "%#v\n\n", app.history[i])
 	}
+	app.mutex.Unlock()
 }
 
 func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Request) {
@@ -176,10 +181,12 @@ func (app *syntheticPublication) historyManager() {
 	for {
 		latest := <- app.latestPublication
 
+		app.mutex.Lock()
 		if len(app.history) == 10 {
 			app.history = app.history[1:len(app.history)]
 		}
 		app.history = append(app.history, latest)
+		app.mutex.Unlock()
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"text/template"
 	"time"
+	"encoding/base64"
 )
 
 type Eom struct {
@@ -24,7 +25,7 @@ func BuildRandomEOMImage(uuid string) *Eom {
 	eom := &Eom{}
 	eom.Uuid = uuid
 	eom.EomType = "Image"
-	eom.Value = string(newByteArray(1000))
+	eom.Value = base64.StdEncoding.EncodeToString(newByteArray(1000))
 	eom.Attributes = populateTemplate("attributes.template", uuid)
 	eom.WorkflowStatus = ""
 	eom.SystemAttributes = populateTemplate("systemAttributes.template", t.Format("20060102"))
@@ -42,7 +43,7 @@ func BuildRandomEOMImage(uuid string) *Eom {
 func newByteArray(length int) []byte {
 	b := make([]byte, length)
 	for i := 0; i < len(b); i++ {
-		b[i] = byte(rand.Intn(128-48) + 48)
+		b[i] = byte(rand.Intn(256))
 	}
 	return b
 }

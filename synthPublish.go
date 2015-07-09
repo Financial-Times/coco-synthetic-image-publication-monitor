@@ -62,7 +62,7 @@ func main() {
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
-		log.Println("Could not start http server.")
+		log.Println("Error: Could not start http server.")
 	}
 }
 
@@ -87,7 +87,7 @@ func (app *syntheticPublication) publish() error {
 	client := http.Client{}
 	req, err := http.NewRequest("POST", buildPostEndpoint(app.postHost), buf)
 	if err != nil {
-		log.Printf("Error: creating request failed. %s", err.Error())
+		log.Printf("Error: Creating request failed. %s", err.Error())
 		return err
 	}
 	req.Header.Add("X-Request-Id", "SYNTHETIC-REQ-MON_"+uniuri.NewLen(10))
@@ -95,7 +95,7 @@ func (app *syntheticPublication) publish() error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Error: executing request failed. %s", err.Error())
+		log.Printf("Error: Executing request failed. %s", err.Error())
 		return err
 	}
 	defer resp.Body.Close()

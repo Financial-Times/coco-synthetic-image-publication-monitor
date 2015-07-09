@@ -58,7 +58,6 @@ func main() {
 	}
 	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
 	http.HandleFunc("/forcePublish", app.forcePublish)
-	http.HandleFunc("/test", testHandler)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Println("Could not start http server.")
@@ -107,14 +106,6 @@ func (app *syntheticPublication) publish() error {
 	}
 
 	return nil
-}
-
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	b, err := json.Marshal(BuildRandomEOMImage(uuid))
-	if err != nil {
-		fmt.Fprintf(w, "Marshaling failed")
-	}
-	fmt.Fprintf(w, "test eom: \n%s", string(b))
 }
 
 func buildPostEndpoint(host string) string {

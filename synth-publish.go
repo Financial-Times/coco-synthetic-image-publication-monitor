@@ -17,8 +17,8 @@ import (
 )
 
 type syntheticPublication struct {
-	postHost          string
-	s3Host            string
+	postEndpoint          string
+	s3Endpoint            string
 	uuid              string
 	latestImage       chan postedData
 	latestPublication chan publication
@@ -51,8 +51,8 @@ func main() {
 
 	flag.Parse()
 	app := &syntheticPublication{
-		postHost:          *postHost,
-		s3Host:            *s3Host,
+		postEndpoint:      buildPostEndpoint(*postHost),
+		s3Endpoint:            buildGetEndpoint(*s3Host, uuid),
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
 		latestPublication: make(chan publication),
@@ -133,7 +133,7 @@ func (app *syntheticPublication) publish() error {
 	buf := bytes.NewReader(json)
 
 	client := http.Client{}
-	req, err := http.NewRequest("POST", buildPostEndpoint(app.postHost), buf)
+	req, err := http.NewRequest("POST", app.postEndpoint, buf)
 	if err != nil {
 		log.Printf("Error: Creating request failed. %s", err.Error())
 		return err
@@ -171,7 +171,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 			continue
 		}
 		time.Sleep(30 * time.Second)
-		resp, err := http.Get(buildGetEndpoint(app.s3Host, app.uuid))
+		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
 			log.Printf(errMsg)

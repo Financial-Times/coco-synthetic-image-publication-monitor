@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	fthealth "github.com/Financial-Times/go-fthealth"
 	"github.com/dchest/uniuri"
 	"github.com/golang/go/src/pkg/encoding/base64"
 	"io/ioutil"
@@ -15,8 +17,8 @@ import (
 )
 
 type syntheticPublication struct {
-	postHost          string
-	s3Host            string
+	postEndpoint      string
+	s3Endpoint        string
 	uuid              string
 	latestImage       chan postedData
 	latestPublication chan publication
@@ -49,8 +51,8 @@ func main() {
 
 	flag.Parse()
 	app := &syntheticPublication{
-		postHost:          *postHost,
-		s3Host:            *s3Host,
+		postEndpoint:      buildPostEndpoint(*postHost),
+		s3Endpoint:        buildGetEndpoint(*s3Host, uuid),
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
 		latestPublication: make(chan publication),
@@ -59,23 +61,44 @@ func main() {
 	}
 
 	if *tick {
-		ticker := time.NewTicker(time.Minute)
+		tick := time.Tick(time.Minute)
 		go func() {
-			for _ = range ticker.C {
+			for {
 				app.publish()
+				<-tick
 			}
 		}()
 	}
 	go app.checkPublishStatus()
 	go app.historyManager()
 
-	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
+	http.HandleFunc("/__health", fthealth.Handler("Synthetic publication monitor", "End-to-end image publication & monitor", app.healthcheck()))
 	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Println("Error: Could not start http server.")
 	}
+}
+
+func (app *syntheticPublication) healthcheck() fthealth.Check {
+	check := fthealth.Check{
+		BusinessImpact:   "Image publication doesn't work",
+		Name:             "End-to-end test",
+		PanicGuide:       "Contact #co-co channel on Slack",
+		Severity:         3,
+		TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
+		Checker:          app.lastPublicationStatus,
+	}
+	return check
+}
+
+func (app *syntheticPublication) lastPublicationStatus() error {
+	n := len(app.history)
+	if n != 0 && !app.history[n-1].succeeded {
+		return errors.New("Publication failed.")
+	}
+	return nil
 }
 
 func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +134,7 @@ func (app *syntheticPublication) publish() error {
 	buf := bytes.NewReader(json)
 
 	client := http.Client{}
-	req, err := http.NewRequest("POST", buildPostEndpoint(app.postHost), buf)
+	req, err := http.NewRequest("POST", app.postEndpoint, buf)
 	if err != nil {
 		log.Printf("Error: Creating request failed. %s", err.Error())
 		return err
@@ -136,7 +159,7 @@ func (app *syntheticPublication) publish() error {
 	return nil
 }
 
-var generalErrMsg = "Internal error. "
+const generalErrMsg = "Internal error. "
 
 func (app *syntheticPublication) checkPublishStatus() {
 	for {
@@ -149,7 +172,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 			continue
 		}
 		time.Sleep(30 * time.Second)
-		resp, err := http.Get(buildGetEndpoint(app.s3Host, app.uuid))
+		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
 			log.Printf(errMsg)
@@ -201,9 +224,8 @@ func (app *syntheticPublication) historyManager() {
 func areEqual(b1, b2 []byte) (bool, string) {
 	if bytes.Equal(b1, b2) {
 		return true, ""
-	} else {
-		return false, "The sent and received images are not equal."
 	}
+	return false, "The sent and received images are not equal."
 }
 
 func buildPostEndpoint(host string) string {

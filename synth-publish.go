@@ -88,12 +88,12 @@ func (app *syntheticPublication) healthcheck() fthealth.Check {
 		PanicGuide:       "Contact #co-co channel on Slack",
 		Severity:         3,
 		TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
-		Checker:          app.lastPublicationStatus,
+		Checker:          app.latestPublicationStatus,
 	}
 	return check
 }
 
-func (app *syntheticPublication) lastPublicationStatus() error {
+func (app *syntheticPublication) latestPublicationStatus() error {
 	n := len(app.history)
 	if n != 0 && !app.history[n-1].succeeded {
 		return errors.New("Publication failed.")

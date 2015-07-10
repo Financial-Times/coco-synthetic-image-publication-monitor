@@ -17,8 +17,8 @@ import (
 )
 
 type syntheticPublication struct {
-	postEndpoint          string
-	s3Endpoint            string
+	postEndpoint      string
+	s3Endpoint        string
 	uuid              string
 	latestImage       chan postedData
 	latestPublication chan publication
@@ -52,7 +52,7 @@ func main() {
 	flag.Parse()
 	app := &syntheticPublication{
 		postEndpoint:      buildPostEndpoint(*postHost),
-		s3Endpoint:            buildGetEndpoint(*s3Host, uuid),
+		s3Endpoint:        buildGetEndpoint(*s3Host, uuid),
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
 		latestPublication: make(chan publication),
@@ -61,10 +61,11 @@ func main() {
 	}
 
 	if *tick {
-		ticker := time.NewTicker(time.Minute)
+		tick := time.Tick(time.Minute)
 		go func() {
-			for _ = range ticker.C {
+			for {
 				app.publish()
+                                <- tick
 			}
 		}()
 	}

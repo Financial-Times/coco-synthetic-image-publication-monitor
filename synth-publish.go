@@ -158,7 +158,7 @@ func (app *syntheticPublication) publish() error {
 	return nil
 }
 
-var generalErrMsg = "Internal error. "
+const generalErrMsg = "Internal error. "
 
 func (app *syntheticPublication) checkPublishStatus() {
 	for {

@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+        "errors"
 	"flag"
 	"fmt"
+        fthealth "github.com/Financial-Times/go-fthealth"
 	"github.com/dchest/uniuri"
 	"github.com/golang/go/src/pkg/encoding/base64"
 	"io/ioutil"
@@ -69,13 +71,33 @@ func main() {
 	go app.checkPublishStatus()
 	go app.historyManager()
 
-	http.HandleFunc("/__health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "Healthcheck endpoint") })
+	http.HandleFunc("/__health", fthealth.Handler("Synthetic publication monitor", "End-to-end image publication & monitor", app.healthcheck()))
 	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Println("Error: Could not start http server.")
 	}
+}
+
+func (app *syntheticPublication) healthcheck() fthealth.Check {
+    check := fthealth.Check{
+        BusinessImpact: "Image publication doesn't work",
+        Name: "End-to-end test",
+        PanicGuide: "Contact #co-co channel on Slack",
+        Severity: 3,
+        TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
+        Checker: app.lastPublicationStatus,
+    }
+    return check
+}
+
+func (app *syntheticPublication) lastPublicationStatus() error {
+    n := len(app.history)
+    if n != 0 && !app.history[n-1].succeeded {
+        return errors.New("Publication failed.")
+    }
+    return nil
 }
 
 func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.Request) {

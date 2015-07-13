@@ -21,7 +21,7 @@ type Eom struct {
 
 // Builds and populates an Eom struct matching the Methode EOM representation.
 // The EOM value is a randomly generated 1000 length byte array encoded with base64, therefore producing a viewable string.
-func BuildRandomEOMImage(uuid string) *Eom {
+func BuildRandomEOMImage(uuid string) (*Eom, time.Time) {
 	t := time.Now()
 
 	eom := &Eom{}
@@ -39,7 +39,7 @@ func BuildRandomEOMImage(uuid string) *Eom {
 		t.Format(time.UnixDate),
 	})
 	eom.LinkedObjects = make([]interface{}, 0)
-	return eom
+	return eom, t
 }
 
 func newByteArray(length int) []byte {

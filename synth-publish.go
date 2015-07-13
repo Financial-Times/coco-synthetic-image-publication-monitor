@@ -142,9 +142,9 @@ func (app *syntheticPublication) publish() error {
 	}
 	req.Header.Add("X-Request-Id", "SYNTHETIC-REQ-MON_"+uniuri.NewLen(10))
 	req.Header.Add("X-Origin-System-Id", "methode-web-pub")
-        if *reqHeader {
-            req.Host = "cms-notifier"
-        }
+	if *reqHeader {
+		req.Host = "cms-notifier"
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {

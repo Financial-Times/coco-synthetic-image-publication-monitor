@@ -21,10 +21,10 @@ type syntheticPublication struct {
 	s3Endpoint        string
 	uuid              string
 	latestImage       chan postedData
-	latestPublication chan publication
+	latestPublication chan publicationResult
 
 	mutex   *sync.Mutex
-	history []publication
+	history []publicationResult
 }
 
 type postedData struct {
@@ -33,7 +33,7 @@ type postedData struct {
 	img string
 }
 
-type publication struct {
+type publicationResult struct {
 	time      time.Time
 	succeeded bool
 	errorMsg  string
@@ -56,9 +56,9 @@ func main() {
 		s3Endpoint:        buildGetEndpoint(*s3Host, uuid),
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
-		latestPublication: make(chan publication),
+		latestPublication: make(chan publicationResult),
 		mutex:             &sync.Mutex{},
-		history:           make([]publication, 0),
+		history:           make([]publicationResult, 0),
 	}
 
 	if *tick {
@@ -155,7 +155,7 @@ func (app *syntheticPublication) publish() error {
 
 	if resp.StatusCode != 200 {
 		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
-		app.latestPublication <- publication{time, false, errMsg}
+		app.latestPublication <- publicationResult{time, false, errMsg}
 	} else {
 		app.latestImage <- postedData{time, eom.Value}
 	}
@@ -172,7 +172,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
 			log.Printf(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 		time.Sleep(30 * time.Second)
@@ -180,7 +180,7 @@ func (app *syntheticPublication) checkPublishStatus() {
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
 			log.Printf(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 		defer resp.Body.Close()
@@ -190,12 +190,12 @@ func (app *syntheticPublication) checkPublishStatus() {
 		case http.StatusNotFound:
 			errMsg := fmt.Sprint("Error: Image not found.")
 			log.Println(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
 			continue
 		default:
 			errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
 			log.Println(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 
@@ -203,12 +203,12 @@ func (app *syntheticPublication) checkPublishStatus() {
 		if err != nil {
 			errMsg := fmt.Sprintf("Error: Could not read resp body. %s", err.Error())
 			log.Printf(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
 			continue
 		}
 
 		equals, msg := areEqual(sentImg, receivedImg)
-		app.latestPublication <- publication{latest.time, equals, msg}
+		app.latestPublication <- publicationResult{latest.time, equals, msg}
 	}
 }
 

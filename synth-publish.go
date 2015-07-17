@@ -170,13 +170,13 @@ func (app *syntheticPublication) checkPublishStatus() {
 		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
-			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Decoding image received from channed failed. " + err.Error())
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Decoding image received from channed failed. "+err.Error())
 			continue
 		}
 		time.Sleep(30 * time.Second)
 		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
-			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Get request to s3 failed. " + err.Error())
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Get request to s3 failed. "+err.Error())
 			continue
 		}
 		defer resp.Body.Close()
@@ -184,16 +184,16 @@ func (app *syntheticPublication) checkPublishStatus() {
 		switch resp.StatusCode {
 		case http.StatusOK:
 		case http.StatusNotFound:
-			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Image not found. " + err.Error())
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Image not found. "+err.Error())
 			continue
 		default:
-			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Get request does not return 200 status. " + err.Error())
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Get request does not return 200 status. "+err.Error())
 			continue
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Could not read resp body. " + err.Error())
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Could not read resp body. "+err.Error())
 			continue
 		}
 

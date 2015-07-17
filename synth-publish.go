@@ -163,20 +163,20 @@ func (app *syntheticPublication) publish() error {
 	return nil
 }
 
-const generalErrMsg = "Internal error. "
+const internalErr = "Internal error: "
 
 func (app *syntheticPublication) checkPublishingStatus() {
 	for {
 		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Decoding image received from channed failed. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
 			continue
 		}
 		time.Sleep(30 * time.Second)
 		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Get request to s3 failed. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())
 			continue
 		}
 		defer resp.Body.Close()
@@ -184,16 +184,16 @@ func (app *syntheticPublication) checkPublishingStatus() {
 		switch resp.StatusCode {
 		case http.StatusOK:
 		case http.StatusNotFound:
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Image not found. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.time, "Image not found. Response status code: 404.")
 			continue
 		default:
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Get request does not return 200 status. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
 			continue
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Could not read resp body. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Could not read resp body. "+err.Error())
 			continue
 		}
 
@@ -206,6 +206,7 @@ func handlePublishingCheckErr(latestPublication chan<- publicationResult, time t
 	log.Printf(errMsg)
 	latestPublication <- publicationResult{time, false, errMsg}
 }
+
 func (app *syntheticPublication) historyManager() {
 	for {
 		latest := <-app.latestPublication
@@ -223,7 +224,7 @@ func areEqual(b1, b2 []byte) (bool, string) {
 	if bytes.Equal(b1, b2) {
 		return true, ""
 	}
-	return false, "The sent and received images are not equal."
+	return false, "Posted image content differs from the image in s3."
 }
 
 func buildPostEndpoint(host string) string {

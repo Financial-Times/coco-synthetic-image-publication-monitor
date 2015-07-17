@@ -29,7 +29,7 @@ type syntheticPublication struct {
 
 type postedData struct {
 	time time.Time
-	img string //base64 encoded string representation of the generated image
+	img  string //base64 encoded string representation of the generated image
 
 }
 

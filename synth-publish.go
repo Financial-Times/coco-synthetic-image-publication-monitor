@@ -170,17 +170,13 @@ func (app *syntheticPublication) checkPublishStatus() {
 		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
-			log.Printf(errMsg)
-			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Decoding image received from channed failed. " + err.Error())
 			continue
 		}
 		time.Sleep(30 * time.Second)
 		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
-			log.Printf(errMsg)
-			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Get request to s3 failed. " + err.Error())
 			continue
 		}
 		defer resp.Body.Close()
@@ -188,22 +184,16 @@ func (app *syntheticPublication) checkPublishStatus() {
 		switch resp.StatusCode {
 		case http.StatusOK:
 		case http.StatusNotFound:
-			errMsg := fmt.Sprint("Error: Image not found.")
-			log.Println(errMsg)
-			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Image not found. " + err.Error())
 			continue
 		default:
-			errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
-			log.Println(errMsg)
-			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Get request does not return 200 status. " + err.Error())
 			continue
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error: Could not read resp body. %s", err.Error())
-			log.Printf(errMsg)
-			app.latestPublication <- publicationResult{latest.time, false, generalErrMsg + errMsg}
+			handleCheckPublishStatusErr(app.latestPublication, latest.time, false, "Could not read resp body. " + err.Error())
 			continue
 		}
 
@@ -212,6 +202,10 @@ func (app *syntheticPublication) checkPublishStatus() {
 	}
 }
 
+func handleCheckPublishStatusErr(latestPublication chan<- publicationResult, time time.Time, succeeded bool, errMsg string) {
+	log.Printf(errMsg)
+	latestPublication <- publicationResult{time, false, errMsg}
+}
 func (app *syntheticPublication) historyManager() {
 	for {
 		latest := <-app.latestPublication

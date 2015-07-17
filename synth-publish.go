@@ -87,7 +87,7 @@ func (app *syntheticPublication) healthcheck() fthealth.Check {
 		BusinessImpact:   "Image publication doesn't work",
 		Name:             "End-to-end test",
 		PanicGuide:       "Contact #co-co channel on Slack",
-		Severity:         3,
+		Severity:         1,
 		TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
 		Checker:          app.latestPublicationStatus,
 	}

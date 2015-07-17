@@ -21,19 +21,19 @@ type syntheticPublication struct {
 	s3Endpoint        string
 	uuid              string
 	latestImage       chan postedData
-	latestPublication chan publication
+	latestPublication chan publicationResult
 
 	mutex   *sync.Mutex
-	history []publication
+	history []publicationResult
 }
 
 type postedData struct {
 	time time.Time
-	//base64 encoded string representation of the generated image
-	img string
+	img  string //base64 encoded string representation of the generated image
+
 }
 
-type publication struct {
+type publicationResult struct {
 	time      time.Time
 	succeeded bool
 	errorMsg  string
@@ -44,7 +44,7 @@ var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment with vulcan, hence the request header must be set.")
 
-//fixed
+//fixed test uuid
 const uuid = "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3"
 
 func main() {
@@ -56,9 +56,9 @@ func main() {
 		s3Endpoint:        buildGetEndpoint(*s3Host, uuid),
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
-		latestPublication: make(chan publication),
+		latestPublication: make(chan publicationResult),
 		mutex:             &sync.Mutex{},
-		history:           make([]publication, 0),
+		history:           make([]publicationResult, 0),
 	}
 
 	if *tick {
@@ -70,7 +70,7 @@ func main() {
 			}
 		}()
 	}
-	go app.checkPublishStatus()
+	go app.checkPublishingStatus()
 	go app.historyManager()
 
 	http.HandleFunc("/__health", fthealth.Handler("Synthetic publication monitor", "End-to-end image publication & monitor", app.healthcheck()))
@@ -155,7 +155,7 @@ func (app *syntheticPublication) publish() error {
 
 	if resp.StatusCode != 200 {
 		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
-		app.latestPublication <- publication{time, false, errMsg}
+		app.latestPublication <- publicationResult{time, false, errMsg}
 	} else {
 		app.latestImage <- postedData{time, eom.Value}
 	}
@@ -163,24 +163,20 @@ func (app *syntheticPublication) publish() error {
 	return nil
 }
 
-const generalErrMsg = "Internal error. "
+const internalErr = "Internal error: "
 
-func (app *syntheticPublication) checkPublishStatus() {
+func (app *syntheticPublication) checkPublishingStatus() {
 	for {
 		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error: Decoding image received from channel failed. %s", err.Error())
-			log.Printf(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
 			continue
 		}
 		time.Sleep(30 * time.Second)
 		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error: Get request to s3 failed. %s", err.Error())
-			log.Printf(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())
 			continue
 		}
 		defer resp.Body.Close()
@@ -188,28 +184,30 @@ func (app *syntheticPublication) checkPublishStatus() {
 		switch resp.StatusCode {
 		case http.StatusOK:
 		case http.StatusNotFound:
-			errMsg := fmt.Sprint("Error: Image not found.")
-			log.Println(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			handlePublishingCheckErr(app.latestPublication, latest.time, "Image not found. Response status code: 404.")
 			continue
 		default:
-			errMsg := fmt.Sprint("Error: Get request does not return 200 status.")
-			log.Println(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			handlePublishingCheckErr(app.latestPublication, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
 			continue
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error: Could not read resp body. %s", err.Error())
-			log.Printf(errMsg)
-			app.latestPublication <- publication{latest.time, false, generalErrMsg + errMsg}
+			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Could not read resp body. "+err.Error())
 			continue
 		}
 
-		equals, msg := areEqual(sentImg, receivedImg)
-		app.latestPublication <- publication{latest.time, equals, msg}
+		if !bytes.Equal(sentImg, receivedImg) {
+			handlePublishingCheckErr(app.latestPublication, latest.time, "Posted image content differs from the image in s3.")
+			continue
+		}
+		app.latestPublication <- publicationResult{latest.time, true, ""}
 	}
+}
+
+func handlePublishingCheckErr(latestPublication chan<- publicationResult, time time.Time, errMsg string) {
+	log.Printf(errMsg)
+	latestPublication <- publicationResult{time, false, errMsg}
 }
 
 func (app *syntheticPublication) historyManager() {
@@ -223,13 +221,6 @@ func (app *syntheticPublication) historyManager() {
 		app.history = append(app.history, latest)
 		app.mutex.Unlock()
 	}
-}
-
-func areEqual(b1, b2 []byte) (bool, string) {
-	if bytes.Equal(b1, b2) {
-		return true, ""
-	}
-	return false, "The sent and received images are not equal."
 }
 
 func buildPostEndpoint(host string) string {

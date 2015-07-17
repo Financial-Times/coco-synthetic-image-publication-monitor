@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//Eom struct matching Methode eom files
 type Eom struct {
 	UUID             string        `json:"uuid"`
 	EomType          string        `json:"type"`
@@ -19,7 +20,7 @@ type Eom struct {
 	LinkedObjects    []interface{} `json:"linkedObjects"`
 }
 
-// Builds and populates an Eom struct matching the Methode EOM representation.
+// BuildRandomEOMImage builds and populates an Eom struct.
 // The EOM value is a randomly generated 1000 length byte array encoded with base64 in string representation
 func BuildRandomEOMImage(uuid string) (*Eom, time.Time) {
 	t := time.Now()

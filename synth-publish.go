@@ -29,8 +29,8 @@ type syntheticPublication struct {
 
 type postedData struct {
 	time time.Time
-	//base64 encoded string representation of the generated image
-	img string
+	img string //base64 encoded string representation of the generated image
+
 }
 
 type publicationResult struct {
@@ -44,7 +44,7 @@ var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment with vulcan, hence the request header must be set.")
 
-//fixed
+//fixed test uuid
 const uuid = "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3"
 
 func main() {
@@ -197,8 +197,11 @@ func (app *syntheticPublication) checkPublishingStatus() {
 			continue
 		}
 
-		equals, msg := areEqual(sentImg, receivedImg)
-		app.latestPublication <- publicationResult{latest.time, equals, msg}
+		if !bytes.Equal(sentImg, receivedImg) {
+			handlePublishingCheckErr(app.latestPublication, latest.time, "Posted image content differs from the image in s3.")
+			continue
+		}
+		app.latestPublication <- publicationResult{latest.time, true, ""}
 	}
 }
 
@@ -218,13 +221,6 @@ func (app *syntheticPublication) historyManager() {
 		app.history = append(app.history, latest)
 		app.mutex.Unlock()
 	}
-}
-
-func areEqual(b1, b2 []byte) (bool, string) {
-	if bytes.Equal(b1, b2) {
-		return true, ""
-	}
-	return false, "Posted image content differs from the image in s3."
 }
 
 func buildPostEndpoint(host string) string {

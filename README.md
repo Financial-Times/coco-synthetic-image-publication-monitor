@@ -1,4 +1,4 @@
-#coco-synthetic-image-publication-monitor
+#synthetic-publication
 
 Performs test image publications and monitors for problem.
 

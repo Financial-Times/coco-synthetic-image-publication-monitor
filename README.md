@@ -11,7 +11,7 @@ As of July 17 2015 this service hits cms-notifier in the dockerized stack, hence
 ####Endpoints
 1. /__health : ft-standard healthcheck, OK if publishing works
 2. /history : displays the latest ten publications' result in custom format
-3. /forcePublish : in case you want to force generating and posting the img (useful locally, when the service is started without the `tick` flag enabled)
+3. /forcePublish : in case you want to force generating and posting the img (use this without the `tick` flag enabled, otherwise it may produce false results due to publication check timings; useful locally and for testing)
 
 Note: the '/__health' endpoint looks for the most recent publication status.
 

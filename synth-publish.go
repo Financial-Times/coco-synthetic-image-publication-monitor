@@ -157,8 +157,7 @@ func (app *syntheticPublication) publish() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
-		app.latestPublication <- publicationResult{tid, time, false, errMsg}
+		handlePublishingCheckErr(app.latestPublication, tid, time, fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode))
 	} else {
 		app.latestImage <- postedData{tid, time, eom.Value}
 	}

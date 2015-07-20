@@ -42,7 +42,7 @@ type publicationResult struct {
 var postHost = flag.String("postHost", "cms-notifier-pr-uk-int.svc.ft.com", "publish entrypoint host name (e.g. address of cms-notifier in UCS)")
 var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 service)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
-var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment with vulcan, hence the request header must be set.")
+var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment through vulcan, therefore the request header must be set.")
 
 //fixed test uuid
 const uuid = "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3"

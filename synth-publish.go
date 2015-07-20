@@ -157,7 +157,7 @@ func (app *syntheticPublication) publish() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		handlePublishingCheckErr(app.latestPublication, tid, time, fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode))
+		handlePublishingErr(app.latestPublication, tid, time, fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode))
 	} else {
 		app.latestImage <- postedData{tid, time, eom.Value}
 	}
@@ -172,13 +172,13 @@ func (app *syntheticPublication) checkPublishingStatus() {
 		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
+			handlePublishingErr(app.latestPublication, latest.tid, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
 			continue
 		}
 		time.Sleep(30 * time.Second)
 		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())
+			handlePublishingErr(app.latestPublication, latest.tid, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())
 			continue
 		}
 		defer resp.Body.Close()
@@ -186,28 +186,28 @@ func (app *syntheticPublication) checkPublishingStatus() {
 		switch resp.StatusCode {
 		case http.StatusOK:
 		case http.StatusNotFound:
-			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, "Image not found. Response status code: 404.")
+			handlePublishingErr(app.latestPublication, latest.tid, latest.time, "Image not found. Response status code: 404.")
 			continue
 		default:
-			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
+			handlePublishingErr(app.latestPublication, latest.tid, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
 			continue
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, internalErr+"Could not read resp body. "+err.Error())
+			handlePublishingErr(app.latestPublication, latest.tid, latest.time, internalErr+"Could not read resp body. "+err.Error())
 			continue
 		}
 
 		if !bytes.Equal(sentImg, receivedImg) {
-			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, "Posted image content differs from the image in s3.")
+			handlePublishingErr(app.latestPublication, latest.tid, latest.time, "Posted image content differs from the image in s3.")
 			continue
 		}
 		app.latestPublication <- publicationResult{latest.tid, latest.time, true, ""}
 	}
 }
 
-func handlePublishingCheckErr(latestPublication chan<- publicationResult, tid string, time time.Time, errMsg string) {
+func handlePublishingErr(latestPublication chan<- publicationResult, tid string, time time.Time, errMsg string) {
 	log.Printf("ERROR Publish failed. " + errMsg)
 	latestPublication <- publicationResult{tid, time, false, errMsg}
 }

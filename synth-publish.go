@@ -209,7 +209,7 @@ func (app *syntheticPublication) checkPublishingStatus() {
 }
 
 func handlePublishingCheckErr(latestPublication chan<- publicationResult, tid string, time time.Time, errMsg string) {
-	log.Printf(errMsg)
+	log.Printf("ERROR Publish failed. " + errMsg)
 	latestPublication <- publicationResult{tid, time, false, errMsg}
 }
 

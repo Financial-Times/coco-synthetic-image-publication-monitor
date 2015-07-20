@@ -28,12 +28,13 @@ type syntheticPublication struct {
 }
 
 type postedData struct {
+	tid  string
 	time time.Time
 	img  string //base64 encoded string representation of the generated image
-
 }
 
 type publicationResult struct {
+	tid       string
 	time      time.Time
 	succeeded bool
 	errorMsg  string
@@ -106,9 +107,10 @@ func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.R
 	log.Printf("History request.")
 	app.mutex.Lock()
 	for i := len(app.history) - 1; i >= 0; i-- {
-		fmt.Fprintf(w, "%d. { Date: %s, Succeeded: %t, Message: %s}\n\n",
+		fmt.Fprintf(w, "%d. { Date: %s, Tid: %s, Succeeded: %t, Message: %s}\n\n",
 			len(app.history)-i,
 			app.history[i].time.String(),
+			app.history[i].tid,
 			app.history[i].succeeded,
 			app.history[i].errorMsg,
 		)
@@ -140,7 +142,8 @@ func (app *syntheticPublication) publish() error {
 		log.Printf("Error: Creating request failed. %s", err.Error())
 		return err
 	}
-	req.Header.Add("X-Request-Id", "SYNTHETIC-REQ-MON_"+uniuri.NewLen(10))
+	tid := "SYNTHETIC-REQ-MON_" + uniuri.NewLen(10)
+	req.Header.Add("X-Request-Id", tid)
 	req.Header.Add("X-Origin-System-Id", "methode-web-pub")
 	if *reqHeader {
 		req.Host = "cms-notifier"
@@ -155,9 +158,9 @@ func (app *syntheticPublication) publish() error {
 
 	if resp.StatusCode != 200 {
 		errMsg := fmt.Sprintf("Publishing failed at first step: could not post data to CMS notifier. Status code: %d", resp.StatusCode)
-		app.latestPublication <- publicationResult{time, false, errMsg}
+		app.latestPublication <- publicationResult{tid, time, false, errMsg}
 	} else {
-		app.latestImage <- postedData{time, eom.Value}
+		app.latestImage <- postedData{tid, time, eom.Value}
 	}
 
 	return nil
@@ -170,13 +173,13 @@ func (app *syntheticPublication) checkPublishingStatus() {
 		latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
 			continue
 		}
 		time.Sleep(30 * time.Second)
 		resp, err := http.Get(app.s3Endpoint)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())
 			continue
 		}
 		defer resp.Body.Close()
@@ -184,30 +187,30 @@ func (app *syntheticPublication) checkPublishingStatus() {
 		switch resp.StatusCode {
 		case http.StatusOK:
 		case http.StatusNotFound:
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Image not found. Response status code: 404.")
+			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, "Image not found. Response status code: 404.")
 			continue
 		default:
-			handlePublishingCheckErr(app.latestPublication, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
+			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
 			continue
 		}
 
 		receivedImg, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			handlePublishingCheckErr(app.latestPublication, latest.time, internalErr+"Could not read resp body. "+err.Error())
+			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, internalErr+"Could not read resp body. "+err.Error())
 			continue
 		}
 
 		if !bytes.Equal(sentImg, receivedImg) {
-			handlePublishingCheckErr(app.latestPublication, latest.time, "Posted image content differs from the image in s3.")
+			handlePublishingCheckErr(app.latestPublication, latest.tid, latest.time, "Posted image content differs from the image in s3.")
 			continue
 		}
-		app.latestPublication <- publicationResult{latest.time, true, ""}
+		app.latestPublication <- publicationResult{latest.tid, latest.time, true, ""}
 	}
 }
 
-func handlePublishingCheckErr(latestPublication chan<- publicationResult, time time.Time, errMsg string) {
+func handlePublishingCheckErr(latestPublication chan<- publicationResult, tid string, time time.Time, errMsg string) {
 	log.Printf(errMsg)
-	latestPublication <- publicationResult{time, false, errMsg}
+	latestPublication <- publicationResult{tid, time, false, errMsg}
 }
 
 func (app *syntheticPublication) historyManager() {

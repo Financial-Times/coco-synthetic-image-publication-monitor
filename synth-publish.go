@@ -18,6 +18,7 @@ import (
 
 type syntheticPublication struct {
 	postEndpoint      string
+	postCredentials   string
 	s3Endpoint        string
 	uuid              string
 	latestImage       chan postedData
@@ -41,6 +42,7 @@ type publicationResult struct {
 }
 
 var postHost = flag.String("postHost", "cms-notifier-pr-uk-int.svc.ft.com", "publish entrypoint host name (e.g. address of cms-notifier in UCS)")
+var postCredentials = flag.String("postCredentials", "", "Authorization header value used to connect to the postHost")
 var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 service)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment through vulcan, therefore the request header must be set.")
@@ -54,6 +56,7 @@ func main() {
 	flag.Parse()
 	app := &syntheticPublication{
 		postEndpoint:      buildPostEndpoint(*postHost),
+		postCredentials:   *postCredentials,
 		s3Endpoint:        buildGetEndpoint(*s3Host, uuid),
 		uuid:              uuid,
 		latestImage:       make(chan postedData),
@@ -145,6 +148,7 @@ func (app *syntheticPublication) publish() error {
 	tid := "SYNTHETIC-REQ-MON_" + uniuri.NewLen(10)
 	req.Header.Add("X-Request-Id", tid)
 	req.Header.Add("X-Origin-System-Id", "methode-web-pub")
+	req.Header.Add("Authorization", app.postCredentials)
 	if *reqHeader {
 		req.Host = "cms-notifier"
 	}

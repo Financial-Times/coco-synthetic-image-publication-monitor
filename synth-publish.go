@@ -46,9 +46,7 @@ var postCredentials = flag.String("postCredentials", "", "Authorization header v
 var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 service)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
 var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment through vulcan, therefore the request header must be set.")
-
-//fixed test uuid
-const uuid = "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3"
+var uuid = flag.String("testUuid", "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3", "uuid for the mock image used in the test")
 
 func main() {
 	log.Println("Starting synthetic image publication monitor...")
@@ -57,8 +55,8 @@ func main() {
 	app := &syntheticPublication{
 		postEndpoint:      buildPostEndpoint(*postHost),
 		postCredentials:   *postCredentials,
-		s3Endpoint:        buildGetEndpoint(*s3Host, uuid),
-		uuid:              uuid,
+		s3Endpoint:        buildGetEndpoint(*s3Host, *uuid),
+		uuid:              *uuid,
 		latestImage:       make(chan postedData),
 		latestPublication: make(chan publicationResult),
 		mutex:             &sync.Mutex{},
@@ -131,7 +129,7 @@ func (app *syntheticPublication) forcePublish(w http.ResponseWriter, r *http.Req
 }
 
 func (app *syntheticPublication) publish() error {
-	eom, time := BuildRandomEOMImage(uuid)
+	eom, time := BuildRandomEOMImage(app.uuid)
 	json, err := json.Marshal(eom)
 	if err != nil {
 		log.Printf("JSON marshalling failed. %s", err.Error())

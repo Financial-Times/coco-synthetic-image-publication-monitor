@@ -170,8 +170,8 @@ func (app *syntheticPublication) publish() error {
 const internalErr = "Internal error: "
 
 func (app *syntheticPublication) checkPublishingStatus() {
-	for {
-		latest := <-app.latestImage
+	for latest := range app.latestImage {
+		//latest := <-app.latestImage
 		sentImg, err := base64.StdEncoding.DecodeString(latest.img)
 		if err != nil {
 			handlePublishingErr(app.latestPublication, latest.tid, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())

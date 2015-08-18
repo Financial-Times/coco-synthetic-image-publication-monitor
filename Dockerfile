@@ -1,11 +1,17 @@
-FROM golang
+FROM gliderlabs/alpine:3.2
 
-RUN go get github.com/Financial-Times/coco-synthetic-image-publication-monitor
-RUN cp $GOPATH/bin/coco-synthetic-image-publication-monitor /synth-publication
-RUN cp $GOPATH/src/github.com/Financial-Times/coco-synthetic-image-publication-monitor/attributes.template /attributes.template
-RUN cp $GOPATH/src/github.com/Financial-Times/coco-synthetic-image-publication-monitor/systemAttributes.template /systemAttributes.template
-RUN cp $GOPATH/src/github.com/Financial-Times/coco-synthetic-image-publication-monitor/usageTickets.template /usageTickets.template
-
+ADD . /synthetic-image-publication-monitor
+RUN apk --update add go git\
+  && export GOPATH=/.gopath \
+  && go get github.com/Financial-Times/coco-synthetic-image-publication-monitor \
+  && cd synthetic-image-publication-monitor \
+  && go build \
+  && mv synthetic-image-publication-monitor /synth-publication \
+  && mv attributes.template /attributes.template \
+  && mv systemAttributes.template /systemAttributes.template \
+  && mv usageTickets.template /usageTickets.template \
+  && apk del go git \
+  && rm -rf $GOPATH /var/cache/apk/*
 
 ENV AWS_ADDRESS s3.amazonaws.com
 ENV BUCKET_ADDRESS com.ft.imagepublish.int

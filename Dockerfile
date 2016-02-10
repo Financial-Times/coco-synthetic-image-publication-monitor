@@ -17,5 +17,5 @@ ENV AWS_ADDRESS s3.amazonaws.com
 ENV BUCKET_ADDRESS com.ft.imagepublish.int
 EXPOSE 8080
 
-CMD cd / && /synth-publication -dynRouting=$DYN_ROUTING -postHost=$POST_ADDRESS -postCredentials="$POST_CREDENTIALS" -s3Host=$BUCKET_ADDRESS.$AWS_ADDRESS -testUuid=$TEST_UUID
+CMD exec /synth-publication -dynRouting=$DYN_ROUTING -postHost=$POST_ADDRESS -postCredentials="$POST_CREDENTIALS" -s3Host=$BUCKET_ADDRESS.$AWS_ADDRESS -testUuid=$TEST_UUID
 

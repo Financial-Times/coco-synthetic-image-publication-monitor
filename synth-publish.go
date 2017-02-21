@@ -45,7 +45,6 @@ var postHost = flag.String("postHost", "cms-notifier-pr-uk-int.svc.ft.com", "pub
 var postCredentials = flag.String("postCredentials", "", "Authorization header value used to connect to the postHost")
 var s3Host = flag.String("s3Host", "com.ft.imagepublish.int.s3.amazonaws.com", "saved image endpoint host name (e.g. address of the s3 service)")
 var tick = flag.Bool("tick", true, "true, if this service should periodially generate and post content to the post endpoint")
-var reqHeader = flag.Bool("dynRouting", false, "true, if post request is routed in a containerized environment through vulcan, therefore the request header must be set.")
 var uuid = flag.String("testUuid", "c94a3a57-3c99-423c-a6bd-ed8c4c10a3c3", "uuid for the mock image used in the test")
 
 func main() {
@@ -147,9 +146,6 @@ func (app *syntheticPublication) publish() error {
 	req.Header.Add("X-Request-Id", tid)
 	req.Header.Add("X-Origin-System-Id", "methode-web-pub")
 	req.Header.Add("Authorization", app.postCredentials)
-	if *reqHeader {
-		req.Host = "cms-notifier"
-	}
 
 	resp, err := client.Do(req)
 	if err != nil {

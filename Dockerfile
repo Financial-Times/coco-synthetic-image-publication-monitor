@@ -4,6 +4,7 @@ ADD . /synthetic-image-publication-monitor
 RUN apk --update add go git\
   && export GOPATH=/.gopath \
   && go get github.com/Financial-Times/coco-synthetic-image-publication-monitor \
+  && go get github.com/Financial-Times/service-status-go \
   && cd synthetic-image-publication-monitor \
   && go build \
   && mv synthetic-image-publication-monitor /synth-publication \
@@ -18,4 +19,3 @@ ENV BUCKET_ADDRESS com.ft.imagepublish.int
 EXPOSE 8080
 
 CMD exec /synth-publication -postHost=$POST_ADDRESS -postCredentials="$POST_CREDENTIALS" -s3Host=$BUCKET_ADDRESS.$AWS_ADDRESS -testUuid=$TEST_UUID
-

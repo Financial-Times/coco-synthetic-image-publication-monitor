@@ -7,6 +7,8 @@ import (
 	"flag"
 	"fmt"
 	fthealth "github.com/Financial-Times/go-fthealth"
+	"github.com/Financial-Times/service-status-go/gtg"
+	"github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/dchest/uniuri"
 	"github.com/golang/go/src/pkg/encoding/base64"
 	"io/ioutil"
@@ -75,6 +77,8 @@ func main() {
 	go app.publishingMonitor()
 	go app.historyManager()
 
+	gtgHandler := httphandlers.NewGoodToGoHandler(gtg.StatusChecker(app.gtg))
+	http.HandleFunc(httphandlers.GTGPath, gtgHandler)
 	http.HandleFunc("/__health", fthealth.Handler("Synthetic publication monitor", "End-to-end image publication & monitor", app.healthcheck()))
 	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
@@ -83,6 +87,17 @@ func main() {
 		log.Println("Error: Could not start http server.")
 	}
 }
+
+func (app *syntheticPublication) gtg() gtg.Status {
+	err := app.latestPublicationStatus()
+
+	if err != nil {
+		return gtg.Status{GoodToGo:false, Message:"Image publication doesn't work"}
+	}
+
+	return gtg.Status{GoodToGo:true}
+}
+
 
 func (app *syntheticPublication) healthcheck() fthealth.Check {
 	check := fthealth.Check{

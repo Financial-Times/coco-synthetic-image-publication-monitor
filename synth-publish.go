@@ -16,7 +16,10 @@ import (
 	"time"
 )
 
-const stateCheckInterval = time.Duration(60) * time.Second
+const (
+	stateCheckInterval = time.Duration(60) * time.Second
+ 	postInterval = time.Duration(120) * time.Second
+)
 
 type syntheticPublication struct {
 	postEndpoint      string
@@ -66,7 +69,7 @@ func main() {
 	}
 
 	if *tick {
-		tick := time.Tick(time.Minute)
+		tick := time.Tick(postInterval)
 		go func() {
 			for {
 				app.publish()

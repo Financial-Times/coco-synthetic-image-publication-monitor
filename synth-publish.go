@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+const stateCheckInterval = time.Duration(60) * time.Second
+
 type syntheticPublication struct {
 	postEndpoint      string
 	postCredentials   string
@@ -181,7 +183,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		handlePublishingErr(result, latest.tid, latest.time, internalErr+"Decoding image received from channed failed. "+err.Error())
 		return
 	}
-	time.Sleep(30 * time.Second)
+	time.Sleep(stateCheckInterval)
 	resp, err := http.Get(s3Endpoint)
 	if err != nil {
 		handlePublishingErr(result, latest.tid, latest.time, internalErr+"Executing Get request to s3 failed. "+err.Error())

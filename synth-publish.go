@@ -156,6 +156,7 @@ func (app *syntheticPublication) publish() error {
 		req.Host = "cms-notifier"
 	}
 
+	log.Printf("Sending publishing request %s", tid)
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("Error: Executing request failed. %s", err.Error())
@@ -214,6 +215,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		handlePublishingErr(result, latest.tid, latest.time, "Posted image content differs from the image in s3.")
 		return
 	}
+	log.Printf("Received publication result for %s", latest.tid)
 	result <- publicationResult{latest.tid, latest.time, true, ""}
 }
 

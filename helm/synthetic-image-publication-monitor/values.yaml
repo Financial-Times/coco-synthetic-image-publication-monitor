@@ -6,7 +6,6 @@ service:
   hasHealthcheck: "true"
 image:
   repository: coco/coco-synthetic-image-publication-monitor
-  version: "" # should be set explicitly at installation
   pullPolicy: Always
 resources:
   limits:

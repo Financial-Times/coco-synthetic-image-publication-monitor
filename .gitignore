@@ -1,2 +1,3 @@
 .idea
-coco-synthetic-image-publication-monitor
+coco-synthetic-image-publication-monitor*
+vendor/*/

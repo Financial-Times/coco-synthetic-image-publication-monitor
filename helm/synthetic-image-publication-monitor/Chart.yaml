@@ -1,0 +1,4 @@
+apiVersion: v1
+description: synthetic-image-publication-monitor Helm chart for Kubernetes
+name: synthetic-image-publication-monitor
+version: 0.0.0

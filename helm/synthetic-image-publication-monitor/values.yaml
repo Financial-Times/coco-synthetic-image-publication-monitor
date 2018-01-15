@@ -8,7 +8,9 @@ image:
   repository: coco/coco-synthetic-image-publication-monitor
   pullPolicy: Always
 resources:
+  requests:
+    memory: 8Mi
   limits:
-    memory: 256Mi
+    memory: 72Mi
 
 

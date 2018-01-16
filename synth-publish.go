@@ -88,6 +88,7 @@ func main() {
 			Description: "End-to-end image publication & monitor",
 			Checks: []fthealth.Check{app.healthcheck()},
 		},
+		Timeout: 10 * time.Second,
 	}
 	http.HandleFunc("/__health", fthealth.Handler(timedHC))
 	http.HandleFunc(httphandlers.GTGPath, httphandlers.NewGoodToGoHandler(gtg.StatusChecker(app.GTG)))

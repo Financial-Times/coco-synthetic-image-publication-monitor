@@ -6,7 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	fthealth "github.com/Financial-Times/go-fthealth"
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/service-status-go/gtg"
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/dchest/uniuri"
@@ -81,9 +81,17 @@ func main() {
 	go app.publishingMonitor()
 	go app.historyManager()
 
-	gtgHandler := httphandlers.NewGoodToGoHandler(gtg.StatusChecker(app.gtg))
-	http.HandleFunc(httphandlers.GTGPath, gtgHandler)
-	http.HandleFunc("/__health", fthealth.Handler("Synthetic publication monitor", "End-to-end image publication & monitor", app.healthcheck()))
+	timedHC := fthealth.TimedHealthCheck{
+		HealthCheck: fthealth.HealthCheck{
+			SystemCode: "synth-image-pub-monitor",
+			Name: "Synthetic publication monitor",
+			Description: "End-to-end image publication & monitor",
+			Checks: []fthealth.Check{app.healthcheck()},
+		},
+		Timeout: 10 * time.Second,
+	}
+	http.HandleFunc("/__health", fthealth.Handler(timedHC))
+	http.HandleFunc(httphandlers.GTGPath, httphandlers.NewGoodToGoHandler(gtg.StatusChecker(app.GTG)))
 	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
@@ -92,35 +100,40 @@ func main() {
 	}
 }
 
-func (app *syntheticPublication) gtg() gtg.Status {
-	err := app.latestPublicationStatus()
-
-	if err != nil {
-		return gtg.Status{GoodToGo:false, Message:"Image publication doesn't work"}
+func (app *syntheticPublication) GTG() gtg.Status {
+	statusCheck := func() gtg.Status {
+		return gtgCheck(app.latestPublicationStatus)
 	}
 
-	return gtg.Status{GoodToGo:true}
+	return gtg.FailFastParallelCheck([]gtg.StatusChecker{statusCheck})()
+}
+
+func gtgCheck(handler func() (string, error)) gtg.Status {
+	if _, err := handler(); err != nil {
+		return gtg.Status{GoodToGo: false, Message: "Image publication doesn't work"}
+	}
+	return gtg.Status{GoodToGo: true}
 }
 
 
 func (app *syntheticPublication) healthcheck() fthealth.Check {
-	check := fthealth.Check{
+	return fthealth.Check{
 		BusinessImpact:   "Image publication doesn't work",
-		Name:             "End-to-end test",
+		Name:             "End-to-end test of image publication",
 		PanicGuide:       "Contact #co-co channel on Slack",
 		Severity:         1,
 		TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
 		Checker:          app.latestPublicationStatus,
 	}
-	return check
 }
 
-func (app *syntheticPublication) latestPublicationStatus() error {
+func (app *syntheticPublication) latestPublicationStatus() (string, error) {
 	n := len(app.history)
 	if n != 0 && !app.history[n-1].succeeded {
-		return errors.New("Publication failed.")
+		msg := "Publication failed."
+		return msg, errors.New(msg)
 	}
-	return nil
+	return "Ok", nil
 }
 
 func (app *syntheticPublication) historyHandler(w http.ResponseWriter, r *http.Request) {

@@ -3,4 +3,4 @@ replicaCount: 1
 service:
   name: synthetic-image-publication-monitor
 env:
-  imageUuid: "6a70679a-fd9b-4d64-9bec-2d340fb75021"
+  imageUuid: "7a70679a-fd9b-4d64-9bec-2d340fb75021"

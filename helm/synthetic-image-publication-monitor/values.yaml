@@ -12,5 +12,5 @@ resources:
     memory: 8Mi
   limits:
     memory: 72Mi
-
-
+env:
+  imageUuid: "" # This should be defined in the specific app-configs folder

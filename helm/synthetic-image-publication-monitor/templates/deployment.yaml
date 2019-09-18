@@ -42,6 +42,16 @@ spec:
               key: aws.s3.image.binaries.bucket
         - name: TEST_UUID
           value: "6a70679a-fd9b-4d64-9bec-2d340fb75021"
+        - name: JENKINS_TOKEN
+          valueFrom:
+           secretKeyRef:
+              key: token
+              name: jenkins-token-r494c
+        - name: ENVNAME
+          valueFrom:
+            configMapKeyRef:
+              name: global-config
+              key: environment
         ports: 
         - containerPort: 8080 
         livenessProbe: 

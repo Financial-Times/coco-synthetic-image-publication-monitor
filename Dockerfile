@@ -1,4 +1,4 @@
-FROM golang:1
+FROM golang:1.12
 
 ENV PROJECT=coco-synthetic-image-publication-monitor
 COPY . /${PROJECT}-sources/

@@ -1,8 +1,10 @@
-FROM golang:1.8-alpine
+FROM golang:1
 
 ENV PROJECT=coco-synthetic-image-publication-monitor
 COPY . /${PROJECT}-sources/
 
+RUN wget "https://storage.googleapis.com/kubernetes-release/release/v1.13.7/bin/linux/amd64/kubectl" -O /usr/local/bin/kubectl \
+  && chmod +x /usr/local/bin/kubectl 
 RUN apk --no-cache --virtual .build-dependencies add git \
   && ORG_PATH="github.com/Financial-Times" \
   && REPO_PATH="${ORG_PATH}/${PROJECT}" \

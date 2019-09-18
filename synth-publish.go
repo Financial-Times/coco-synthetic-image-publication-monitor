@@ -6,21 +6,23 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os/exec"
+	"sync"
+	"time"
+
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/service-status-go/gtg"
 	"github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/dchest/uniuri"
 	"github.com/golang/go/src/pkg/encoding/base64"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"sync"
-	"time"
 )
 
 const (
 	stateCheckInterval = time.Duration(60) * time.Second
- 	postInterval = time.Duration(120) * time.Second
+	postInterval       = time.Duration(120) * time.Second
 )
 
 type syntheticPublication struct {
@@ -83,10 +85,10 @@ func main() {
 
 	timedHC := fthealth.TimedHealthCheck{
 		HealthCheck: fthealth.HealthCheck{
-			SystemCode: "synth-image-pub-monitor",
-			Name: "Synthetic publication monitor",
+			SystemCode:  "synth-image-pub-monitor",
+			Name:        "Synthetic publication monitor",
 			Description: "End-to-end image publication & monitor",
-			Checks: []fthealth.Check{app.healthcheck()},
+			Checks:      []fthealth.Check{app.healthcheck()},
 		},
 		Timeout: 10 * time.Second,
 	}
@@ -114,7 +116,6 @@ func gtgCheck(handler func() (string, error)) gtg.Status {
 	}
 	return gtg.Status{GoodToGo: true}
 }
-
 
 func (app *syntheticPublication) healthcheck() fthealth.Check {
 	return fthealth.Check{
@@ -220,8 +221,41 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 
 	switch resp.StatusCode {
 	case http.StatusOK:
+		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm", "--ignore-not-found")
+		cmdI := exec.Command("kubectl", "delete", "pods", "--selector=job-name=image-trace-job", "--ignore-not-found=true")
+
+		errR := cmdR.Run()
+		if errR != nil {
+			log.Printf("cmdR.Run() failed with %s\n", errR)
+		}
+
+		errI := cmdI.Run()
+		if errI != nil {
+			log.Printf("cmdR.Run() failed with %s\n", errI)
+		}
 	case http.StatusNotFound:
 		handlePublishingErr(result, latest.tid, latest.time, "Image not found. Response status code: 404.")
+		cmd1 := exec.Command("kubectl", "delete", "jobs", "image-trace-job", "--ignore-not-found")
+		cmd2 := exec.Command("kubectl", "delete", "configmap", "synthetic-tid")
+		cmd3 := exec.Command("kubectl", "create", "configmap", "synthetic-tid", "--from-literal=TID="+latest.tid)
+		cmd4 := exec.Command("kubectl", "create", "job", "--from=cronjob/image-trace", "image-trace-job")
+		err1 := cmd1.Run()
+		if err1 != nil {
+			log.Printf("cmd1.Run() failed with %s\n", err1)
+		}
+		err2 := cmd2.Run()
+		if err2 != nil {
+			log.Printf("cmd2.Run() failed with %s\n", err2)
+		}
+		err3 := cmd3.Run()
+		if err3 != nil {
+			log.Printf("cmd3.Run() failed with %s\n", err3)
+		}
+		err4 := cmd4.Run()
+		if err4 != nil {
+			log.Printf("cmd4.Run() failed with %s\n", err4)
+		}
+
 		return
 	default:
 		handlePublishingErr(result, latest.tid, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))
@@ -238,7 +272,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		handlePublishingErr(result, latest.tid, latest.time, "Posted image content differs from the image in s3.")
 		return
 	}
-	
+
 	result <- publicationResult{latest.tid, latest.time, true, ""}
 }
 

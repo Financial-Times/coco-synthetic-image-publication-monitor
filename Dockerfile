@@ -1,4 +1,4 @@
-FROM golang:1.12
+FROM golang:1.12-alpine
 
 ENV PROJECT=coco-synthetic-image-publication-monitor
 COPY . /${PROJECT}-sources/

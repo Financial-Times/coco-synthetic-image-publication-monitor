@@ -41,4 +41,4 @@ ENV AWS_ADDRESS s3.amazonaws.com
 ENV BUCKET_ADDRESS com.ft.imagepublish.int
 EXPOSE 8080
 
-CMD exec start.sh
+CMD exec /start.sh

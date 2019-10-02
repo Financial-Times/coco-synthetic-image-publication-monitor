@@ -3,9 +3,12 @@ FROM golang:1.12-alpine
 ENV PROJECT=coco-synthetic-image-publication-monitor
 COPY . /${PROJECT}-sources/
 COPY kubeconfig-template /root/.kube/config
+COPY start.sh /
+
 
 RUN wget "https://storage.googleapis.com/kubernetes-release/release/v1.13.7/bin/linux/amd64/kubectl" -O /usr/local/bin/kubectl \
   && chmod +x /usr/local/bin/kubectl
+RUN chmod 755 start.sh
 RUN apk --no-cache --virtual .build-dependencies add git \
   && ORG_PATH="github.com/Financial-Times" \
   && REPO_PATH="${ORG_PATH}/${PROJECT}" \
@@ -38,4 +41,4 @@ ENV AWS_ADDRESS s3.amazonaws.com
 ENV BUCKET_ADDRESS com.ft.imagepublish.int
 EXPOSE 8080
 
-CMD exec sed -i "s@JENKINS_TOKEN@$JENKINS_TOKEN@g" /root/.kube/config &&  /coco-synthetic-image-publication-monitor -postHost=$POST_ADDRESS -postCredentials="$POST_CREDENTIALS" -s3Host=$BUCKET_ADDRESS.$AWS_ADDRESS -testUuid=$TEST_UUID
+CMD exec start.sh

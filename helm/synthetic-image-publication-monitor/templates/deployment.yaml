@@ -47,6 +47,11 @@ spec:
            secretKeyRef:
               key: token
               name: jenkins-token-r494c
+        - name: ENVNAME
+          valueFrom:
+            configMapKeyRef:
+              name: global-config
+              key: environment
         ports: 
         - containerPort: 8080 
         livenessProbe: 

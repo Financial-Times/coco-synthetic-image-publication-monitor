@@ -1,0 +1,1 @@
+sed -i "s@JENKINS_TOKEN@$JENKINS_TOKEN@g" /root/.kube/config

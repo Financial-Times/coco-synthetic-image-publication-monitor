@@ -43,7 +43,7 @@ spec:
         - name: TEST_UUID
           value: "6a70679a-fd9b-4d64-9bec-2d340fb75021"
         - name: JENKINS_TOKEN
-          value_from:
+          valueFrom:
            secretKeyRef:
               key: token
               name: jenkins-token-r494c

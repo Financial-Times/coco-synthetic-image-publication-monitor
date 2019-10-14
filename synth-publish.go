@@ -240,7 +240,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 			log.Fatalf("cmd.Run() failed with %s\n", err)
 		}
 		err4 := cmd4.Run()
-		if err1 != nil {
+		if err4 != nil {
 			log.Fatalf("cmd.Run() failed with %s\n", err)
 		}
 		return

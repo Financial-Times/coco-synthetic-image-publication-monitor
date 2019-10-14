@@ -218,7 +218,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		return
 	}
 	defer resp.Body.Close()
-	statusCode := http.StatusNotFound //resp.StatusCode
+
 	switch statusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:

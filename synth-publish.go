@@ -219,7 +219,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 	}
 	defer resp.Body.Close()
 
-	switch rresp.StatusCode {
+	switch resp.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
 		handlePublishingErr(result, latest.tid, latest.time, "Image not found. Response status code: 404.")

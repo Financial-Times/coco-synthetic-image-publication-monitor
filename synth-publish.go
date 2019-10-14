@@ -229,19 +229,19 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		cmd4 := exec.Command("kubectl", "create", "job", "--from=cronjob/image-trace", "image-trace-job")
 		err1 := cmd1.Run()
 		if err1 != nil {
-			log.Fatalf("cmd.Run() failed with %s\n", err)
+			log.Fatalf("cmd1.Run() failed with %s\n", err)
 		}
 		err2 := cmd2.Run()
 		if err2 != nil {
-			log.Fatalf("cmd.Run() failed with %s\n", err)
+			log.Fatalf("cmd1.Run() failed with %s\n", err)
 		}
 		err3 := cmd3.Run()
 		if err3 != nil {
-			log.Fatalf("cmd.Run() failed with %s\n", err)
+			log.Fatalf("cmd1.Run() failed with %s\n", err)
 		}
 		err4 := cmd4.Run()
 		if err4 != nil {
-			log.Fatalf("cmd.Run() failed with %s\n", err)
+			log.Fatalf("cmd1.Run() failed with %s\n", err)
 		}
 		return
 	default:

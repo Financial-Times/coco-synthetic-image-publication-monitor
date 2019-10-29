@@ -221,12 +221,18 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 
 	switch resp.StatusCode {
 	case http.StatusOK:
+		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm")
+		errR := cmdR.Run()
+		if errR != nil {
+			log.Fatalf("cmdR.Run() failed with %s\n", errR)
+		}
 	case http.StatusNotFound:
 		handlePublishingErr(result, latest.tid, latest.time, "Image not found. Response status code: 404.")
 		cmd1 := exec.Command("kubectl", "delete", "jobs", "image-trace-job")
 		cmd2 := exec.Command("kubectl", "delete", "configmap", "synthetic-tid")
 		cmd3 := exec.Command("kubectl", "create", "configmap", "synthetic-tid", "--from-literal=TID="+latest.tid)
 		cmd4 := exec.Command("kubectl", "create", "job", "--from=cronjob/image-trace", "image-trace-job")
+		cmdA := exec.Command("kubectl", "create", "cm", "synthetic-image-alarm", "--from-literal=alarm=true")
 		err1 := cmd1.Run()
 		if err1 != nil {
 			log.Fatalf("cmd1.Run() failed with %s\n", err1)
@@ -242,6 +248,10 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		err4 := cmd4.Run()
 		if err4 != nil {
 			log.Fatalf("cmd1.Run() failed with %s\n", err4)
+		}
+		errA := cmdA.Run()
+		if errA != nil {
+			log.Fatalf("cmdA.Run() failed with %s\n", errA)
 		}
 		return
 	default:

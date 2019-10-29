@@ -221,7 +221,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm")
+		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm" "--ignore-not-found")
 		errR := cmdR.Run()
 		if errR != nil {
 			log.Fatalf("cmdR.Run() failed with %s\n", errR)

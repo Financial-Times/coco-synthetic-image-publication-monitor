@@ -228,7 +228,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		}
 	case http.StatusNotFound:
 		handlePublishingErr(result, latest.tid, latest.time, "Image not found. Response status code: 404.")
-		cmd1 := exec.Command("kubectl", "delete", "jobs", "image-trace-job")
+		cmd1 := exec.Command("kubectl", "delete", "jobs", "image-trace-job", "--ignore-not-found")
 		cmd2 := exec.Command("kubectl", "delete", "configmap", "synthetic-tid")
 		cmd3 := exec.Command("kubectl", "create", "configmap", "synthetic-tid", "--from-literal=TID="+latest.tid)
 		cmd4 := exec.Command("kubectl", "create", "job", "--from=cronjob/image-trace", "image-trace-job")

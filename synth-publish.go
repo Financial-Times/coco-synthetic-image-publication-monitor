@@ -218,7 +218,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		return
 	}
 	defer resp.Body.Close()
-
+	statusCode := http.StatusNotFound //resp.StatusCode
 	switch resp.StatusCode {
 	case http.StatusOK:
 		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm", "--ignore-not-found")
@@ -233,6 +233,7 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		cmd3 := exec.Command("kubectl", "create", "configmap", "synthetic-tid", "--from-literal=TID="+latest.tid)
 		cmd4 := exec.Command("kubectl", "create", "job", "--from=cronjob/image-trace", "image-trace-job")
 		cmdA := exec.Command("kubectl", "create", "cm", "synthetic-image-alarm", "--from-literal=alarm=true", "--dry-run=true", "-oyaml", "|", "kubectl", "apply", "-f", "-")
+
 		err1 := cmd1.Run()
 		if err1 != nil {
 			log.Fatalf("cmd1.Run() failed with %s\n", err1)

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -233,8 +232,6 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 		cmd2 := exec.Command("kubectl", "delete", "configmap", "synthetic-tid")
 		cmd3 := exec.Command("kubectl", "create", "configmap", "synthetic-tid", "--from-literal=TID="+latest.tid)
 		cmd4 := exec.Command("kubectl", "create", "job", "--from=cronjob/image-trace", "image-trace-job")
-		cmdA := exec.Command("kubectl", "create", "cm", "synthetic-image-alarm", "--from-literal=alarm=true", "--dry-run=true", "-oyaml")
-		cmdB := exec.Command("kubectl", "apply", "-f", "-")
 		err1 := cmd1.Run()
 		if err1 != nil {
 			log.Fatalf("cmd1.Run() failed with %s\n", err1)
@@ -252,24 +249,6 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 			log.Fatalf("cmd1.Run() failed with %s\n", err4)
 		}
 
-		reader, writer := io.Pipe()
-
-		// push cmdA command output to writer
-		cmdA.Stdout = writer
-
-		// read from cmdA command output
-		cmdB.Stdin = reader
-
-		// prepare a buffer to capture the output
-		// after cmdB command finished executing
-		var buff bytes.Buffer
-		cmdB.Stdout = &buff
-
-		cmdA.Start()
-		cmdB.Start()
-		cmdA.Wait()
-		writer.Close()
-		cmdB.Wait()
 		return
 	default:
 		handlePublishingErr(result, latest.tid, latest.time, fmt.Sprintf("Get request is not successful. Response status code: %d", resp.StatusCode))

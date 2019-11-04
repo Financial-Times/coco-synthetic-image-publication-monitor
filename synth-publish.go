@@ -219,7 +219,8 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 	}
 	defer resp.Body.Close()
 
-	switch resp.StatusCode {
+	StatusCode := http.StatusNotFound //resp.StatusCode
+	switch StatusCode {
 	case http.StatusOK:
 		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm", "--ignore-not-found")
 		errR := cmdR.Run()

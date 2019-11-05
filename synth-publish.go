@@ -222,9 +222,16 @@ func checkPublishingStatus(latest postedData, result chan<- publicationResult, s
 	switch resp.StatusCode {
 	case http.StatusOK:
 		cmdR := exec.Command("kubectl", "delete", "cm", "synthetic-image-alarm", "--ignore-not-found")
+		cmdI := exec.Command("kubectl", "delete", "pods" "--selector=job-name=image-trace-job")
+		
 		errR := cmdR.Run()
 		if errR != nil {
 			log.Fatalf("cmdR.Run() failed with %s\n", errR)
+		}
+
+		errI := cmdI.Run()
+		if errI != nil {
+			log.Fatalf("cmdR.Run() failed with %s\n", errI)
 		}
 	case http.StatusNotFound:
 		handlePublishingErr(result, latest.tid, latest.time, "Image not found. Response status code: 404.")

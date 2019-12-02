@@ -46,7 +46,7 @@ spec:
           valueFrom:
            secretKeyRef:
               key: token
-              name: jenkins-token-r494c
+              name: jenkins-token-4jpqn
         - name: ENVNAME
           valueFrom:
             configMapKeyRef:

@@ -3,6 +3,7 @@
 Performs test image publications and monitors for problem.
 
 This service periodically hits the current stack's cms-notifier with a random image, which then is picked up by the kafka-bridge and forwarded to the containerised stack's cms-notifier. The image is then stored in a specific S3 bucket. The service after a given waiting time tests whether the content in S3 matches the published image.
+In case of "Image not found" is reported the service will trigger a job https://github.com/Financial-Times/coco-image-trace from cronjob that will trace the missing transaction ID thought services in kubernetes and will alert in Slack channel
 
 ---
 

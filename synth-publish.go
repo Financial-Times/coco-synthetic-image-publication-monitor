@@ -94,6 +94,7 @@ func main() {
 	}
 	http.HandleFunc("/__health", fthealth.Handler(timedHC))
 	http.HandleFunc(httphandlers.GTGPath, httphandlers.NewGoodToGoHandler(gtg.StatusChecker(app.GTG)))
+	http.HandleFunc(httphandlers.BuildInfoPath, httphandlers.BuildInfoHandler)
 	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)
@@ -121,7 +122,7 @@ func (app *syntheticPublication) healthcheck() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   "Image publication doesn't work",
 		Name:             "End-to-end test of image publication",
-		PanicGuide:       "Contact #co-co channel on Slack",
+		PanicGuide:       "https://runbooks.in.ft.com/synth-image-pub-monitor",
 		Severity:         1,
 		TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
 		Checker:          app.latestPublicationStatus,

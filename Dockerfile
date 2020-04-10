@@ -20,18 +20,21 @@ RUN VERSION="version=$(git describe --tag --always 2> /dev/null)" \
   && BUILDER="builder=$(go version)" \
   && LDFLAGS="-s -w -X '"${BUILDINFO_PACKAGE}$VERSION"' -X '"${BUILDINFO_PACKAGE}$DATETIME"' -X '"${BUILDINFO_PACKAGE}$REPOSITORY"' -X '"${BUILDINFO_PACKAGE}$REVISION"' -X '"${BUILDINFO_PACKAGE}$BUILDER"'" \
   && CGO_ENABLED=0 go build -mod=readonly -a -o /artifacts/${PROJECT} -ldflags="${LDFLAGS}" \
-  && echo "Build flags: ${LDFLAGS}"
+  && echo "Build flags: ${LDFLAGS}" \
+  && mv attributes.template /attributes.template \
+  && mv systemAttributes.template /systemAttributes.template \
+  && mv usageTickets.template /usageTickets.template
 
-# Multi-stage build - copy certs and the binary into the image
-FROM scratch
+FROM alpine
 WORKDIR /
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=0 /artifacts/* /
+COPY --from=0 /root/.kube/config /root/.kube/config
+COPY --from=0 /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=0 /start.sh /
-COPY --from=0 /root/.kube/config /
-
-CMD [ "/coco-synthetic-image-publication-monitor" ]
-
+COPY --from=0 /attributes.template /
+COPY --from=0 /systemAttributes.template /
+COPY --from=0 /usageTickets.template /
 
 ENV AWS_ADDRESS s3.amazonaws.com
 ENV BUCKET_ADDRESS com.ft.imagepublish.int

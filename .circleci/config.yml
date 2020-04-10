@@ -17,4 +17,3 @@ workflows:
       - ft-golang-ci/scan:
           name: scan-dependencies
           context: cm-team-snyk
-            

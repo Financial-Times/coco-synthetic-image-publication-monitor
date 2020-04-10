@@ -121,7 +121,7 @@ func (app *syntheticPublication) healthcheck() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   "Image publication doesn't work",
 		Name:             "End-to-end test of image publication",
-		PanicGuide:       "Contact #co-co channel on Slack",
+		PanicGuide:       "https://runbooks.in.ft.com/synth-image-pub-monitor",
 		Severity:         1,
 		TechnicalSummary: "Lots of things could have gone wrong. Check the /history endpoint for more info",
 		Checker:          app.latestPublicationStatus,

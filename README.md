@@ -1,5 +1,8 @@
 # synthetic-publication
 
+[![Coverage Status](https://coveralls.io/repos/github/Financial-Times/coco-synthetic-image-publication-monitor/badge.svg?branch=master)](https://coveralls.io/github/Financial-Times/coco-synthetic-image-publication-monitor?branch=master)
+[![CircleCI](https://circleci.com/gh/Financial-Times/coco-synthetic-image-publication-monitor/tree/master.svg?style=svg)](https://circleci.com/gh/Financial-Times/coco-synthetic-image-publication-monitor/tree/master)
+
 Performs test image publications and monitors for problem.
 
 This service periodically hits the current stack's cms-notifier with a random image, which then is picked up by the kafka-bridge and forwarded to the containerised stack's cms-notifier. The image is then stored in a specific S3 bucket. The service after a given waiting time tests whether the content in S3 matches the published image.

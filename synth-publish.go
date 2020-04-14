@@ -94,6 +94,7 @@ func main() {
 	}
 	http.HandleFunc("/__health", fthealth.Handler(timedHC))
 	http.HandleFunc(httphandlers.GTGPath, httphandlers.NewGoodToGoHandler(gtg.StatusChecker(app.GTG)))
+	http.HandleFunc(httphandlers.BuildInfoPath, httphandlers.BuildInfoHandler)
 	http.HandleFunc("/history", app.historyHandler)
 	http.HandleFunc("/forcePublish", app.forcePublish)
 	err := http.ListenAndServe(":8080", nil)

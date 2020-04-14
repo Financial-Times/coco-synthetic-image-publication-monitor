@@ -2,6 +2,7 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/coco-synthetic-image-publication-monitor/badge.svg?branch=master)](https://coveralls.io/github/Financial-Times/coco-synthetic-image-publication-monitor?branch=master)
 [![CircleCI](https://circleci.com/gh/Financial-Times/coco-synthetic-image-publication-monitor/tree/master.svg?style=svg)](https://circleci.com/gh/Financial-Times/coco-synthetic-image-publication-monitor/tree/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/coco-synthetic-image-publication-monitor)](https://goreportcard.com/report/github.com/Financial-Times/coco-synthetic-image-publication-monitor)
 
 Performs test image publications and monitors for problem.
 

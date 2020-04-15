@@ -21,7 +21,6 @@ RUN VERSION="version=$(git describe --tag --always 2> /dev/null)" \
   && LDFLAGS="-s -w -X '"${BUILDINFO_PACKAGE}$VERSION"' -X '"${BUILDINFO_PACKAGE}$DATETIME"' -X '"${BUILDINFO_PACKAGE}$REPOSITORY"' -X '"${BUILDINFO_PACKAGE}$REVISION"' -X '"${BUILDINFO_PACKAGE}$BUILDER"'" \
   && CGO_ENABLED=0 go build -mod=readonly -a -o /artifacts/${PROJECT} -ldflags="${LDFLAGS}" \
   && echo "Build flags: ${LDFLAGS}" \
-  #&& mv /${PROJECT} /${PROJECT}/ \
   && mv attributes.template /attributes.template \
   && mv systemAttributes.template /systemAttributes.template \
   && mv usageTickets.template /usageTickets.template

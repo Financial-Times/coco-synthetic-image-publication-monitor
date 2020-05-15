@@ -30,7 +30,7 @@ WORKDIR /
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=0 /artifacts/* /
 COPY --from=0 /root/.kube/config /root/.kube/config
-COPY --from=0 /usr/local/bin/kubectl /
+COPY --from=0 /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=0 /start.sh /
 COPY --from=0 /attributes.template /
 COPY --from=0 /systemAttributes.template /

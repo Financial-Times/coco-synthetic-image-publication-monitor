@@ -1,4 +1,4 @@
-module github.com/Financial-Times/coco-synthetic-image-publication-monitor
+module github.com/Financial-Times/coco-synthetic-image-publication-monitor/v39
 
 go 1.13
 

@@ -1,4 +1,4 @@
-# UPP - Synthetic image publication monitor
+# UPP - Synthetic Image Publication Monitor
 
 This service performs test image publications and monitors for problems.
 
@@ -59,11 +59,6 @@ No
 ## Contains Sensitive Data
 
 No
-
-## Dependencies
-
-- upp-prod-delivery-eu
-- upp-prod-delivery-us
 
 ## Failover Architecture Type
 

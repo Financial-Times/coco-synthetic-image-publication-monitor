@@ -60,6 +60,11 @@ No
 
 No
 
+## Dependencies
+
+- synthetic-image-trace
+- up-cms-notifier
+
 ## Failover Architecture Type
 
 ActiveActive
